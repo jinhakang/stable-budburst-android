@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Project Budburst</string>
+    <string name="signupURL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register.php</string>
+    <string name="instruction">You have no plants yet, or you need to syncronize your phone.\n\n (1) Start by adding a plant to an existing site (MENU &gt; Add Plant). \n\n (2) Please synchronize your phone with the database (Menu &gt; Sync).  If this fails, you may have connectivity problems.</string>
+</resources>
