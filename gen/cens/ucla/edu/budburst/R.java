@@ -69,17 +69,21 @@ public final class R {
         public static final int username_text=0x7f050009;
     }
     public static final class layout {
-        public static final int button_bar_selector=0x7f030000;
-        public static final int button_field=0x7f030001;
-        public static final int helloscr=0x7f030002;
-        public static final int login=0x7f030003;
-        public static final int text_edit_field=0x7f030004;
-        public static final int two_button_bar=0x7f030005;
-        public static final int white_bg_rounded_corners=0x7f030006;
+        public static final int addplant=0x7f030000;
+        public static final int button_bar_selector=0x7f030001;
+        public static final int button_field=0x7f030002;
+        public static final int helloscr=0x7f030003;
+        public static final int login=0x7f030004;
+        public static final int text_edit_field=0x7f030005;
+        public static final int two_button_bar=0x7f030006;
+        public static final int white_bg_rounded_corners=0x7f030007;
     }
     public static final class string {
         public static final int app_name=0x7f040000;
+        public static final int get_observation_URL=0x7f040003;
+        public static final int get_user_spcies_URL=0x7f040004;
         public static final int instruction=0x7f040002;
         public static final int signupURL=0x7f040001;
+        public static final int upload_observation_URL=0x7f040005;
     }
 }
