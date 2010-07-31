@@ -5,12 +5,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteOpenHelper;
+
 //This class is to download and to upload data with server
 
 
 public class Sync{
 	
 	private String dataJson;
+	private static BudburstDBHelper budburstDBHelper;
 	
 	public Sync(){
 		dataJson = null;
@@ -20,7 +24,7 @@ public class Sync{
 		return dataJson;
 	}
 	
-	//Upload data
+	//Download data
 	public boolean download_json(String url_addr){
 		StringBuilder result = new StringBuilder();
 		try{
@@ -53,7 +57,7 @@ public class Sync{
 		return true;
 	}
 	
-	//Downlaod data
+	//Upload data
 	public boolean upload_json(String url_addr){
 		try{
 			return true;
@@ -71,6 +75,12 @@ public class Sync{
 	}
 }
 	
+class BudburstDBHelper extends SQLiteOpenHelper {
+	public BudburstDBHelper(Context context){
+		super(context, "Budburst.db", null, 1);
+	}
 	
+	public void onCreate()
+}
 		
 
