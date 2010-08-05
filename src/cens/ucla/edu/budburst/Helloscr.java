@@ -1,9 +1,7 @@
 package cens.ucla.edu.budburst;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,9 +10,13 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -22,21 +24,40 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import cens.ucla.edu.budburst.helper.SyncDBHelper;
+import cens.ucla.edu.budburst.helper.SyncNetworkHelper;
 
 public class Helloscr extends Activity{
 
+	final String TAG = new String("Helloscr"); 
+	
 	private String username;
 	private String password;
 	private SharedPreferences pref;
 	private int progressValue;
-	private String result;
-	private Sync sync;
+	private SyncNetworkHelper sync;
+	private String result="";
+	private String error_message;
+	private String synced;
 
-	//MENU contants
-	final private int MENU_ADD_PLANT = 0;
-	final private int MENU_ADD_SITE = 1;
-	final private int MENU_LOGOUT = 2;
-	final private int MENU_SYNC = 3;
+	//MENU constants
+	final private int MENU_SYNC = 1;
+	final private int MENU_ADD_PLANT = 2;
+	final private int MENU_ADD_SITE = 3;
+	final private int MENU_LOGOUT = 4;
+	
+	
+	//Sync constants
+	final private int UPLOAD_ADDED_SITE = 1;
+	final private int UPLOAD_ADDED_PLANT = 2;
+	final private int UPLOAD_OBSERVATION = 3;
+	final private int DOWNLOAD_MY_SPECIES_IN_MY_STATION = 4;
+	final private int DOWNLOAD_OBSERVATION = 5;
+	final private int DOWNLOAD_OBSERVATION_IMG = 6;
+	final private int NETWORK_COMPLETED = 7;
+	
+	
+	public SyncDBHelper syncDBHelper;
 	
 	ProgressDialog mProgress;
 	boolean mQuit;
@@ -47,14 +68,20 @@ public class Helloscr extends Activity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.helloscr);
 		
+		
+		//Call SyncNetworkHelper
+		sync = new SyncNetworkHelper();
+		
 		//Retrieve username and password
 		pref = getSharedPreferences("userinfo",0);
 		username = pref.getString("Username","");
 		password = pref.getString("Password","");
+		synced = pref.getString("Synced", "false");
+		
 		
 		//Display instruction message
 		TextView textViewHello = (TextView)findViewById(R.id.hello_textview);
-		textViewHello.setText("Hello " + username + ",\n\n" + getString(R.string.instruction));
+		textViewHello.setText("Hello " + username + ",\n" + getString(R.string.instruction));
 		
 		//My plant button
 		Button buttonMyplant = (Button)findViewById(R.id.myplant);
@@ -81,6 +108,11 @@ public class Helloscr extends Activity{
 		buttonSync.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v){
+				SharedPreferences.Editor edit = pref.edit();				
+				edit.putString("Synced","true");
+				edit.commit();
+
+				
 				//Show progress
 				showDialog(0);
 				mProgress.setProgress(0);
@@ -95,6 +127,20 @@ public class Helloscr extends Activity{
 		);
 		
 		buttonMyplant.setSelected(true);
+		syncDBHelper = new SyncDBHelper(Helloscr.this);
+		
+		Intent parent_intent = getIntent();
+		if(parent_intent.getExtras() != null &&
+				parent_intent.getExtras().getBoolean("sync_instantly",false)){
+			//Display pregress dialog
+			showDialog(0);
+			mProgress.setProgress(0);
+			
+			//Run thread
+			mQuit = false;
+			mThread = new UpdateThread();
+			mThread.start();
+		}
 	}
 	
 	/////////////////////////////////////////////////////////////
@@ -109,6 +155,8 @@ public class Helloscr extends Activity{
 		
 		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
 		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+		
+
 				
 		return true;
 	}
@@ -117,33 +165,46 @@ public class Helloscr extends Activity{
 	public boolean onOptionsItemSelected(MenuItem item){
 		Intent intent;
 		switch(item.getItemId()){
-		case MENU_SYNC:
-			//Display pregress dialog
-			showDialog(0);
-			mProgress.setProgress(0);
-			
-			//Run thread
-			mQuit = false;
-			mThread = new UpdateThread();
-			mThread.start();
-			return true;
-		case MENU_ADD_PLANT:
-			intent = new Intent(Helloscr.this, AddPlant.class);
-			startActivity(intent);
-			return true;
-		case MENU_ADD_SITE:
-			Toast.makeText(Helloscr.this,"Sorry, it's coming soon..",Toast.LENGTH_SHORT).show();
-			return true;
-		case MENU_LOGOUT:
-			new AlertDialog.Builder(Helloscr.this)
-				.setTitle("Question")
-				.setMessage("You might lose your unsynced data if you log out. Do you want to log out?")
-				.setPositiveButton("Yes",mClick)
-				.setNegativeButton("no",mClick)
-				.show();
-			return true;
+			case MENU_ADD_PLANT:
+				intent = new Intent(Helloscr.this, AddPlant.class);
+				startActivity(intent);
+				finish();
+				return true;
+			case MENU_ADD_SITE:
+				intent = new Intent (Intent.ACTION_VIEW);
+				intent.setData(Uri.parse(getString(R.string.add_site_URL)));
+				startActivity(intent);
+				finish();
+				return true;
+			case MENU_SYNC:
+				SharedPreferences.Editor edit = pref.edit();				
+				edit.putString("Synced","true");
+				edit.commit();
+				
+				//Display pregress dialog
+				showDialog(0);
+				mProgress.setProgress(0);
+				
+				//Run thread
+				mQuit = false;
+				mThread = new UpdateThread();
+				mThread.start();
+				
+
+				
+				return true;
+	
+			case MENU_LOGOUT:
+				new AlertDialog.Builder(Helloscr.this)
+					.setTitle("Question")
+					.setMessage("You might lose your unsynced data if you log out. Do you want to log out?")
+					.setPositiveButton("Yes",mClick)
+					.setNegativeButton("no",mClick)
+					.show();
+				return true;
 		}
 		return false;
+		
 	}
 	
 	//Dialog confirm message if user clicks logout button
@@ -155,10 +216,17 @@ public class Helloscr extends Activity{
 				SharedPreferences.Editor edit = pref.edit();				
 				edit.putString("Username","");
 				edit.putString("Password","");
+				edit.putString("synced", "false");
 				edit.commit();
+				
+				//Drop user table in database
+				SyncDBHelper dbhelper = new SyncDBHelper(Helloscr.this);
+				dbhelper.clearAllTable(Helloscr.this);
+				dbhelper.close();
 				
 				Intent intent = new Intent(Helloscr.this, Login.class);
 				startActivity(intent);
+				finish();
 			}else{
 			}
 		}
@@ -169,71 +237,348 @@ public class Helloscr extends Activity{
 	//Thread
 	class UpdateThread extends Thread{
 		public void run(){
-			sync = new Sync();
 
-			
+			boolean continue_flag=true;
+			String json_result;
 		//0.Upload first
-			if(sync.upload_json(getString(R.string.upload_observation_URL))){
+//			if(sync.upload_json(getString(R.string.upload_observation_URL))){
+//				
+//				//Send Message to handler to show progress
+//				Message msg = mHandler.obtainMessage();
+//				msg.arg1 = 30;
+//				mHandler.sendMessage(msg);
+//			}
+//			else{
+//				continue_flag = false;
+//			}
+			
+			
+
+
+
+			
+			
+			//0.Upload user newly added plant
+			if(continue_flag){
+				json_result = sync.upload_new_plant(username, password, Helloscr.this);
+				if(json_result.equals("No new plant")){
+					Log.d(TAG,"No new plant");
+				}
+				else if(json_result != null){
+					Message msg = mHandler.obtainMessage();
+					msg.arg1 = 10;
+					msg.arg2 = UPLOAD_ADDED_PLANT;
+					msg.obj = json_result;
+					mHandler.sendMessage(msg);
+					try{Thread.sleep(80);}catch(Exception e){;}
+				}
+			}else{
 				Message msg = mHandler.obtainMessage();
-				msg.arg1 = 50;
+				msg.arg1 = -1;
+				msg.obj = new String("Error occurs while uploading new plant.");
 				mHandler.sendMessage(msg);
+				continue_flag = false;
+				return;
 			}
 			
-		//1.Download user site
-			
-			if(sync.download_json(getString(R.string.get_observation_URL))){
+			//0.UPLOAD_OBSERVATION
+			if(continue_flag){
+				json_result = sync.upload_new_obs(username, password, Helloscr.this);
+				if(json_result.equals("No new obs")){
+					Log.d(TAG,"No new obs");
+				}
+				else if(json_result != null){
+					Message msg = mHandler.obtainMessage();
+					msg.arg1 = 20;
+					msg.arg2 = UPLOAD_OBSERVATION;
+					msg.obj = json_result;
+					mHandler.sendMessage(msg);
+					try{Thread.sleep(80);}catch(Exception e){;}
+				}
+			}else{
 				Message msg = mHandler.obtainMessage();
-				msg.arg1 = 50;
+				msg.arg1 = -1;
+				msg.obj = new String("Error occurs while uploading new observation.");
 				mHandler.sendMessage(msg);
+				continue_flag = false;
+				return;
+			}
+			
+			
+		//1.Download user species in user's station
+			
+			if(continue_flag && 
+					(json_result = sync.download_json(
+					getString(R.string.get_my_species_in_my_station_URL)
+					+"&username="+ username	+"&password="+ password)) != null
+					){
+				
+				//Send Message to handler to show progress
+				Message msg = mHandler.obtainMessage();
+				msg.arg1 = 30;
+				msg.arg2 = DOWNLOAD_MY_SPECIES_IN_MY_STATION;
+				msg.obj = json_result; 
+				mHandler.sendMessage(msg);
+				try{Thread.sleep(80);}catch(Exception e){;}
 
 			}else{
 				Message msg = mHandler.obtainMessage();
 				msg.arg1 = -1;
+				msg.obj = new String("Error occurs while downloading my speices.");
 				mHandler.sendMessage(msg);
+				continue_flag = false;
+				return;
 			}
-			
-		//2.Download user species
-			if(sync.download_json(getString(R.string.get_user_spcies_URL))){
+
+		//2.Download user observation table
+			if(continue_flag && 
+					(json_result = sync.download_json(
+					getString(R.string.get_observation_URL)
+					+"&username="+ username	+"&password="+ password)) != null
+					){
+				
+				//Send Message to handler to show progress
 				Message msg = mHandler.obtainMessage();
-				msg.arg1 = 90;
-				mHandler.sendMessage(msg);				
+				msg.arg1 = 50;
+				msg.arg2 = DOWNLOAD_OBSERVATION;
+				msg.obj = json_result;
+				mHandler.sendMessage(msg);
+				try{Thread.sleep(80);}catch(Exception e){;}
+				
 			}else{
 				Message msg = mHandler.obtainMessage();
 				msg.arg1 = -1;
+				msg.obj = new String("Error occurs while downloading my observation.");
 				mHandler.sendMessage(msg);
+				try{Thread.sleep(80);}catch(Exception e){;}
+				continue_flag = false;
+				return;
+			}
+
+		//3.Download observation image files
+			if(continue_flag && sync.download_image(
+				getString(R.string.download_obs_image_URL), Helloscr.this)
+				){
+			
+			//Send Message to handler to show progress
+			Message msg = mHandler.obtainMessage();
+			msg.arg1 = 70;
+			msg.arg2 = DOWNLOAD_OBSERVATION_IMG;
+			msg.obj = new String("{\"success\":true}");
+			mHandler.sendMessage(msg);	
+			try{Thread.sleep(80);}catch(Exception e){;}
+			
+			}else{
+				Message msg = mHandler.obtainMessage();
+				msg.arg1 = -1;
+				msg.obj = new String("Error occurs while downloading image files.");
+
+				mHandler.sendMessage(msg);
+				try{Thread.sleep(80);}catch(Exception e){;}
+				continue_flag = false;
+				return;
 			}
 			
-		//3.Download user observation
-			Message msg = mHandler.obtainMessage();
-			msg.arg1 = 100;
-			mHandler.sendMessage(msg);				
+			//Send 100% progress message
+			if(continue_flag){
+				Message msg = mHandler.obtainMessage();
+				msg.arg1 = 100;
+				msg.arg2 = NETWORK_COMPLETED;
+				mHandler.sendMessage(msg);
+				try{Thread.sleep(80);}catch(Exception e){;}
+				return;
+			}
 		}
 	}
 	
 	//Message handler for download thread
 	Handler mHandler = new Handler(){
 		public void handleMessage(Message msg){
+
 			progressValue = msg.arg1;
-			
-			
+			SQLiteDatabase db;
+
 			if(progressValue == -1){//Download fails
 				mQuit = true;
 				dismissDialog(0);
-				Toast.makeText(Helloscr.this,"Please check your network.",Toast.LENGTH_SHORT).show();
+				Toast.makeText(Helloscr.this,msg.obj + 
+						" Please check your network connectivity and try again.",Toast.LENGTH_LONG).show();
 				progressValue = 0;
 			}
 			else if(progressValue < 100){
 				mProgress.setProgress(progressValue);
 				
-				result = sync.getResult();
-				if(result != null)
-				{
-					TextView textViewHello = (TextView)findViewById(R.id.hello_textview);
-					textViewHello.setText(result);
+				try{
+
+					JSONObject jsonobj = new JSONObject((String)msg.obj);
+					if(jsonobj.getBoolean("success")){
+						//result = jsonresult.toString();
+						db = syncDBHelper.getWritableDatabase();
+						
+						switch(msg.arg2){
+						case UPLOAD_ADDED_SITE:
+							break;
+						case UPLOAD_ADDED_PLANT:
+							mProgress.setMessage("Uploading newly added plants..");
+							break;
+						case UPLOAD_OBSERVATION:
+							mProgress.setMessage("Uploading obseravtions..");
+
+							break;
+						case DOWNLOAD_MY_SPECIES_IN_MY_STATION:
+							mProgress.setMessage("Downloading my plants..");
+							try{
+								jsonobj = new JSONObject((String)msg.obj);
+								JSONArray jsonresult = new JSONArray(jsonobj.getString("results"));
+								db.execSQL("DELETE FROM species_in_mystation;");
+								for(int i=0; i<jsonresult.length(); i++){
+									db.execSQL("INSERT INTO species_in_mystation " +
+											"(species_id, site_id, site_name, protocol_id)" +
+											"VALUES(" +
+											jsonresult.getJSONObject(i).getString("spc_id") + "," +
+											jsonresult.getJSONObject(i).getString("st_id") + "," +
+											"'"+
+											jsonresult.getJSONObject(i).getString("st_name") + "'," +
+											jsonresult.getJSONObject(i).getString("pro_id")
+											+ ");");
+								}
+								
+								Log.d(TAG, "DOWNLOAD_MY_SPECIES_IN_MY_STATION: success to store into db");
+
+							}catch(Exception e){
+								Log.e(TAG, e.toString());
+								Log.d(TAG, "DOWNLOAD_MY_SPECIES_IN_MY_STATION: failed to store into db");
+							}
+							break;
+						case DOWNLOAD_OBSERVATION:
+							mProgress.setMessage("Downloading my observation..");
+							try{
+								jsonobj = new JSONObject((String)msg.obj);
+								JSONArray jsonresult = new JSONArray(jsonobj.getString("results"));
+								db.execSQL("DELETE FROM downloaded_observation;");
+								for(int i=0; i<jsonresult.length(); i++){
+									String query = "INSERT INTO downloaded_observation " +
+									"(species_id, site_id, phenophase_id, image_id, time, note)" +
+									"VALUES(" +
+									jsonresult.getJSONObject(i).getString("species_id") + "," +
+									jsonresult.getJSONObject(i).getString("site_id") + "," +
+									jsonresult.getJSONObject(i).getString("phenophase_id") + "," +
+									"'"+
+									jsonresult.getJSONObject(i).getString("image_id") + "'," +
+									"'"+
+									jsonresult.getJSONObject(i).getString("time") + "'," +
+									"'"+
+									jsonresult.getJSONObject(i).getString("note") + "');";
+									db.execSQL(query);
+								}
+								
+								Log.d(TAG, "DOWNLOAD_OBSERVATION: success to store into db");
+
+////								Cursor cursor;
+////								cursor = db.rawQuery("SELECT * FROM downloaded_observation",null);
+////								result = "";
+////								while(cursor.moveToNext()){
+////								result += cursor.getString(0) + " " + cursor.getString(1) + " " + 
+////								cursor.getString(2) + " " + cursor.getString(3) + " " + 
+////								cursor.getInt(4) + " " + cursor.getString(5) + " " + cursor.getString(6)
+////								+ "\n";
+//								//String sname = cursor.getString(1);
+//								//String scomm = cursor.getString(2);
+//								//String sproto = cursor.getString(3);
+//								
+//								//result += (sid + " " + sname + " " + scomm  + " " + sproto  + " " + 
+//								//		cursor.getString(4) + " " + cursor.getString(5) + cursor.getString(6) +
+//								//		"\n" );
+//								}
+//								
+//								
+//								cursor.close();
+
+							}catch(Exception e){
+								Log.e(TAG, e.toString());
+								Log.d(TAG, "DOWNLOAD_OBSERVATION: failed to store into db");
+							}							
+							break;
+						case DOWNLOAD_OBSERVATION_IMG:
+							mProgress.setMessage("Downloading observation image..");
+							try{
+
+								Log.d(TAG, "DOWNLOAD_OBS_IMAGE: success to store into db");
+
+							}catch(Exception e){
+								Log.e(TAG, e.toString());
+								Log.d(TAG, "DOWNLOAD_OBSERVATION: failed to store into db");
+							}		
+							break;
+						case NETWORK_COMPLETED:
+							break;
+						}
+						
+						db.close();
+					}
+					else{ //Server rejects client request
+						error_message = jsonobj.getString("error_message");
+						mQuit = true;
+						dismissDialog(0);
+						
+						//Error message handling
+						if(error_message.equals("Wrong username and password"))
+						{
+							SharedPreferences.Editor edit = pref.edit();				
+							edit.putString("Username","");
+							edit.putString("Password","");
+							edit.commit();
+						
+			
+							Intent intent = new Intent(Helloscr.this,Login.class);
+							startActivity(intent);
+							finish();
+							return;
+						}
+						Toast.makeText(Helloscr.this, "Message from server:\n" + error_message, Toast.LENGTH_LONG).show();
+						
+					}
+
 				}
-			}else{ //Download done.
-				mQuit = true;
-				dismissDialog(0);
+				catch(Exception e){
+					
+					Log.e(TAG, e.toString());
+				}
+				
+//				if(result != null)
+//				{
+//					TextView textViewHello = (TextView)findViewById(R.id.hello_textview);
+//					textViewHello.setText(result);
+//				}
+
+			}
+			else{ //Download completed.
+				
+//				SQLiteDatabase sdb = syncDBHelper.getReadableDatabase();
+//				Cursor cursor_temp = sdb.rawQuery("SELECT species_id FROM species_in_mystation;",null);
+				//Check if user site is 0 or not
+//				if(cursor_temp.getCount() == 0){
+//					SharedPreferences.Editor edit = pref.edit();				
+//					edit.putString("Synced","true");
+//					edit.commit();
+//					
+//					//Intent intent = new Intent(Helloscr.this, Helloscr.class);
+//					//startActivity(intent);
+//					Toast.makeText(Helloscr.this, "You don't have a site. Please add a site on website.", Toast.LENGTH_SHORT).show();
+//					cursor_temp.close();
+//					syncDBHelper.close();
+//					return;
+//				}else{
+					mProgress.setMessage("Download completed.");
+					mProgress.setProgress(100);
+					mQuit = true;
+					dismissDialog(0);
+					Intent intent = new Intent(Helloscr.this, PlantList.class);
+					startActivity(intent);
+					Toast.makeText(Helloscr.this, "Sync done.",Toast.LENGTH_SHORT).show();
+					finish();
+					syncDBHelper.close();
+//				}
 			}
 		}
 	};

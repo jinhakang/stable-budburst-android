@@ -72,7 +72,7 @@
 		android:layout_centerHorizontal="true"
 		android:layout_alignParentBottom="true"
 		android:textSize="20dip"
-		android:text="Sync!"
+		android:text="Sync"
 		android:focusable="true"
 	/>
 	

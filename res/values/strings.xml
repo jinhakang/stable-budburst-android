@@ -2,9 +2,33 @@
 <resources>
     <string name="app_name">Project Budburst</string>
     <string name="signupURL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register.php</string>
-    <string name="instruction">You have no plants yet, or you need to syncronize your phone.\n\n (1) Start by adding a plant to an existing site (MENU &gt; Add Plant). \n\n (2) Please synchronize your phone with the database (Menu &gt; Sync).  If this fails, you may have connectivity problems.</string>
+    <string name="instruction_old">You have no plants yet, or you need to syncronize your phone.\n\n (1) Start by adding a plant to an existing site (MENU &gt; Add Plant). \n\n (2) Please synchronize your phone with the database (Menu &gt; Sync).  If this fails, you may have connectivity problems.</string>
+    <string name="instruction">You need to synchronize your phone with Project Budburst database.\n\n 
+     (1) Please click Sync button. You can find Sync button at any page by clicking MENU button.\n\n
     
-    <string name="get_observation_URL">http://cens.solidnetdns.com/~jinha/mobile</string>
+     (2) Add a plant to an existing site. (MENU &gt; ADD &gt; Add Plant). Click one of plants in plant list and submit your observation. 
+     </string>
+    <string name="get_my_species_in_my_station_URL">
+    http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?get_my_species_in_my_station
+    </string>
+   
+    <string name="get_observation_URL">
+    http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?get_my_obs</string>
     <string name="get_user_spcies_URL">http://www.google.com</string>
     <string name="upload_observation_URL">http://www.naver.com</string>
+    
+    <string name="add_site_URL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register.php</string>
+    <string name="download_obs_image_URL">
+    http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/upload_images/view.php
+    </string>
+    <string name="add_plant_URL">
+    http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?add_plant
+    </string>
+    
+    
+       <string name="button_bar1"> Leaves</string>
+    <string name="button_bar2"> Flowers</string>
+    <string name="button_bar3"> Fruits</string>
+    <string name="submit_question">You have unsubmitted data. Do you want to submit it?</string>
+    
 </resources>
