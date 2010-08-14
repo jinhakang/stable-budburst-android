@@ -3,8 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="/Users/JK/Downloads/apache-mime4j-0.5/apache-mime4j-0.5.jar"/>
-	<classpathentry kind="lib" path="/Users/JK/Downloads/httpcomponents-core-4.1-beta1/lib/httpcore-4.1-beta1.jar"/>
-	<classpathentry kind="lib" path="/Users/JK/Downloads/httpmime-4.0-beta2.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/jinha/My Documents/Project Budburst/jar_files_to_include_for_pbbapp/apache-mime4j-0.5-bin/apache-mime4j-0.5/apache-mime4j-0.5.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/jinha/My Documents/Project Budburst/jar_files_to_include_for_pbbapp/httpcore-4.0-beta3.jar/httpcore-4.0-beta3.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/jinha/My Documents/Project Budburst/jar_files_to_include_for_pbbapp/httpmime-4.0-beta2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

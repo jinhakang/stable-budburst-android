@@ -41,104 +41,36 @@ import android.util.Log;
 
 public class SyncNetworkHelper extends Activity{
 	
-	final private String TAG = "SyncNetworkHelper"; 
-	
-	private SyncDBHelper syncDBHelper;	
-	private String dataJson;
-	
-
-	
-	//private static BudburstDBHelper budburstDBHelper;
+	static final String TAG = "SyncNetworkHelper"; 
 	
 	public SyncNetworkHelper(){
-		dataJson = null;
 	}
 	
-	public String getResult(){
-		return dataJson;
-	}
-	
-	//Download image
-	public boolean download_image(String url_addr, Context cont){
+	static public String upload_new_plant(String username, String password, Context cont
+			,String species_id, String site_id){
 		try{
-			syncDBHelper = new SyncDBHelper(cont);
-			SQLiteDatabase db = syncDBHelper.getReadableDatabase();
-
-			ArrayList<Integer> imageId_arr = new ArrayList<Integer>(); 
-
-			Cursor cursor = db.rawQuery("SELECT image_id FROM downloaded_observation;",null);
-			while(cursor.moveToNext()){
-				if(cursor.getInt(0) != 0)
-					imageId_arr.add(cursor.getInt(0));
-			}
-			cursor.close();
-			syncDBHelper.close();
-			String BASE_PATH = "/sdcard/pbudburst/";
-			
-			if(!new File(BASE_PATH).exists()){
-				try{new File(BASE_PATH).mkdirs();}
-				catch(Exception e){
-					Log.e(TAG, e.toString());
-					return false;
-				}
-			}
-				
-			
-			for(int i=0; i<imageId_arr.size() ;i++){
-				String image_URL = url_addr + "?image_id=" + imageId_arr.get(i);
-				String path  = BASE_PATH + imageId_arr.get(i) + ".jpg";
-				ContentDownloader downloader = new ContentDownloader(image_URL);
-				if(!downloader.downloadContentsTo(path))
-					return false;
-			}
-			return true;
-		}catch(Exception e){
-			Log.e(TAG,e.toString());
-			return false;
-		}
-	}
-
-	public String upload_new_plant(String username, String password, Context cont){
-		try{
-			
-			//Open database
-	    	SyncDBHelper syncDBHelper = new SyncDBHelper(cont);
-	    	SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
-	    	
-	    	//Open database cursor
-			Cursor cursor = syncDB.rawQuery("SELECT species_id, site_id FROM species_in_mystation " +
-					"WHERE synced=9", null);
-		    
-			if(cursor.getCount() == 0){
-		        cursor.close();
-		        syncDBHelper.close();
-				return "No new plant";
-			}
 			
 	        // Add your data  
 	        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-	        
 	        String result = null;
 
-	        while(cursor.moveToNext()){
-				HttpClient httpclient = new DefaultHttpClient();  
-			    		    
-			    String url = new String("http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?add_plant&username="
-			    	+username+"&password="+password);
-			    HttpPost httppost = new HttpPost(url);
+			HttpClient httpclient = new DefaultHttpClient();  
+		    		    
+		    String url = new String("" +
+		    		"http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php" +
+		    		"?add_plant&username=" + 
+		    		username+"&password="+password);
+		    HttpPost httppost = new HttpPost(url);
 
-	        	nameValuePairs.add(new BasicNameValuePair("species_id", cursor.getString(0)));  
-	        	nameValuePairs.add(new BasicNameValuePair("site_id", cursor.getString(1)));  
-	        	httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
-		  
-		        // Execute HTTP Post Request  
-	        	HttpResponse response = httpclient.execute(httppost);
-	        	result = response.toString();
-		        Log.d(TAG, response.toString());
-	        }
+        	nameValuePairs.add(new BasicNameValuePair("species_id", species_id));  
+        	nameValuePairs.add(new BasicNameValuePair("site_id", site_id));  
+        	httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
+	  
+	        // Execute HTTP Post Request  
+        	HttpResponse response = httpclient.execute(httppost);
+        	result = response.toString();
+	        Log.d(TAG, response.toString());
 	        
-	        cursor.close();
-	        syncDBHelper.close();
 			return result;
 		}
 		catch(Exception e){
@@ -147,70 +79,41 @@ public class SyncNetworkHelper extends Activity{
 		}
 	}
 	
-	public String upload_new_obs(String username, String password, Context cont){
+
+	
+	static public String upload_new_obs(String username, String password, Context cont,
+			String species_id, String site_id, String phenophase_id,
+			String time, String note, Integer image_id){
 		try{
-			
-			//Open database
-	    	SyncDBHelper syncDBHelper = new SyncDBHelper(cont);
-	    	SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
-	    	
-	    	//Open database cursor
-	    	String query = "SELECT species_id, site_id, phenophase_id, time, note, image_id FROM downloaded_observation WHERE synced=9";
-			Cursor cursor = syncDB.rawQuery(query, null);
-		    
-			if(cursor.getCount() == 0){
-		        cursor.close();
-		        syncDBHelper.close();
-				return "No new obs";
-			}
-			
-
-			
 	        // Add your data  
-	        //List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
-	        
-	        String result = null;
+			String result = null;
 
-	        while(cursor.moveToNext()){
-				HttpClient httpclient = new DefaultHttpClient();  
-			    		    
-			    String url = new String("http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?submit_obs&username="
-			    	+username+"&password="+password);
-			    HttpPost httppost = new HttpPost(url);
-			    
-				String species_id = cursor.getString(0);
-				String site_id = cursor.getString(1);
-				String phenophase_id = cursor.getString(2);
-				String time = cursor.getString(3);
-				String note = cursor.getString(4);
-				String image_id = cursor.getString(5);
-	        	
-	        	MultipartEntity entity = new MultipartEntity();
-	        	entity.addPart("species_id", new StringBody(cursor.getString(0)));
-	        	entity.addPart("site_id", new StringBody(cursor.getString(1)));
-	        	entity.addPart("phenophase_id", new StringBody(cursor.getString(2)));
-	        	entity.addPart("time", new StringBody(cursor.getString(3)));
-	        	entity.addPart("note", new StringBody(cursor.getString(4)));
+			HttpClient httpclient = new DefaultHttpClient();  
+		    String url = new String("" +
+		    		"http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php" +
+		    		"?submit_obs&username=" +
+		    		username+"&password="+password);
+		    HttpPost httppost = new HttpPost(url);
+        	
+        	MultipartEntity entity = new MultipartEntity();
+        	entity.addPart("species_id", new StringBody(species_id));
+        	entity.addPart("site_id", new StringBody(site_id));
+        	entity.addPart("phenophase_id", new StringBody(phenophase_id));
+        	entity.addPart("time", new StringBody(time));
+        	entity.addPart("note", new StringBody(note));
 
-
-			    if(cursor.getInt(5) != 0){
-				    File file = new File("/sdcard/pbudburst/" + cursor.getString(5) + ".jpg");
-		        	entity.addPart("image", new FileBody(file));
-			    }
-			    	
-	        	httppost.setEntity(entity);
-	        	
-	        	//httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
-		  
-		        // Execute HTTP Post Request  
-	        	HttpResponse response = httpclient.execute(httppost);
-	        	result = response.toString();
-		        Log.d(TAG, response.toString());
-	        }
-
-	        syncDBHelper.close();
-	        cursor.close();
-			return result;
+		    if(image_id != 0){
+			    File file = new File("/sdcard/pbudburst/" + image_id.toString() + ".jpg");
+	        	entity.addPart("image", new FileBody(file));
+		    }
+		    
+        	httppost.setEntity(entity);
+        	
+	        // Execute HTTP Post Request  
+        	HttpResponse response = httpclient.execute(httppost);
+        	result = response.toString();
+	        Log.d(TAG, response.toString());
+	        return result;
 		}
 		catch(Exception e){
 			Log.e(TAG, e.toString());
@@ -220,7 +123,7 @@ public class SyncNetworkHelper extends Activity{
 	
 	
 	//Download data
-	public String download_json(String url_addr){
+	static public String download_json(String url_addr){
 		StringBuilder result = new StringBuilder();
 		try{
 			URL url = new URL(url_addr);
@@ -252,19 +155,27 @@ public class SyncNetworkHelper extends Activity{
 		return result.toString();
 	}
 	
-	//Upload data
-	public boolean upload_json(String url_addr){
+	//Download image
+	static public Boolean download_image(String url_addr, int image_id){
 		try{
+			String BASE_PATH = "/sdcard/pbudburst/";
+			
+			if(!new File(BASE_PATH).exists()){
+				try{new File(BASE_PATH).mkdirs();}
+				catch(Exception e){
+					Log.e(TAG, e.toString());
+					return false;
+				}
+			}
+
+			String image_URL = url_addr + "?image_id=" + image_id;
+			String path  = BASE_PATH + image_id + ".jpg";
+			ContentDownloader downloader = new ContentDownloader(image_URL);
+			if(!downloader.downloadContentsTo(path))
+				return false;
 			return true;
 		}catch(Exception e){
-			return false;
-		}
-	}
-	
-	public boolean insert_downloaded_json_into_database(String downloaded_json){
-		try{
-			return true;
-		}catch(Exception e){
+			Log.e(TAG,e.toString());
 			return false;
 		}
 	}

@@ -31,8 +31,7 @@ public class Login extends Activity{
 		pref = getSharedPreferences("userinfo", 0);
 		
 		if(	!(pref.getString("Username","").equals("")) && !(pref.getString("Password","").equals(""))){
-			
-			Intent intent = new Intent(Login.this, Helloscr.class);
+			Intent intent = new Intent(Login.this, Sync.class);
 			Login.this.startActivity(intent);
 			finish();
 		}
@@ -53,7 +52,7 @@ public class Login extends Activity{
 					edit.putString("Password",Password.trim());
 					edit.commit();
 					
-					Intent intent = new Intent(Login.this, Helloscr.class);
+					Intent intent = new Intent(Login.this, Sync.class);
 					Login.this.startActivity(intent);
 					finish();
 				}
@@ -72,7 +71,7 @@ public class Login extends Activity{
 				edit.putString("Password","test");
 				edit.commit();
 				
-				Intent intent = new Intent(Login.this, Helloscr.class);
+				Intent intent = new Intent(Login.this, Sync.class);
 				startActivity(intent);
 				finish();
 			}

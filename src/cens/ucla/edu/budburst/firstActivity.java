@@ -13,18 +13,23 @@ public class firstActivity extends Activity{
 		SharedPreferences pref = getSharedPreferences("userinfo",0);
 		String synced = pref.getString("Synced", "false");
 		
-		
-		
-		if(synced == "true"){
-			Intent intent = new Intent(firstActivity.this, PlantList.class);
-			startActivity(intent);
-			finish();
+		//Check login
+		if(	!(pref.getString("Username","").equals("")) && !(pref.getString("Password","").equals(""))){
+			if(synced == "true"){
+				Intent intent = new Intent(firstActivity.this, PlantList.class);
+				startActivity(intent);
+				finish();
+			}
+			else{
+				Intent intent = new Intent(firstActivity.this, Sync.class);
+				startActivity(intent);
+				finish();
+			}
 		}
 		else{
 			Intent intent = new Intent(firstActivity.this, Login.class);
-			startActivity(intent);
+			firstActivity.this.startActivity(intent);
 			finish();
 		}
 	}
-
 }

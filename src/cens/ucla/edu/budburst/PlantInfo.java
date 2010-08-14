@@ -111,7 +111,7 @@ public class PlantInfo extends Activity{
 					EditText note = (EditText) findViewById(R.id.notes);
 					String current_note = note.getText().toString();
 
-//TODO: to fix tis.					
+//TODO: to fix this.					
 //					if(!current_note.equals(cur_obs.note))
 //						temporary_obs.saved = false;	
 
@@ -547,7 +547,7 @@ public class PlantInfo extends Activity{
 			SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
 			
 			String query = "SELECT " +
-					"_id, image_id, time, note, synced FROM downloaded_observation WHERE " +
+					"_id, image_id, time, note, synced FROM my_observation WHERE " +
 					"species_id=" + species_id + " AND " +
 					"site_id=" + site_id + " AND " +
 					"phenophase_id=" + phenophase_id +
@@ -967,7 +967,6 @@ class Observation{
 		image_id = aImgID;
 		time = aTime;
 		note = aNote;
-		
 	}
 
 	public void copy(Observation o){
@@ -982,7 +981,7 @@ class Observation{
 		}
 	}
 	
-	//obs_id denots this observation is new or update.
+	//obs_id denotes this observation is new or update.
 	public void put(Context cont, Integer obs_id){
 		
 		try{
@@ -991,7 +990,7 @@ class Observation{
 			String query;
 			
 			if(obs_id == 0){
-				query = "INSERT INTO downloaded_observation VALUES (" +
+				query = "INSERT INTO my_observation VALUES (" +
 						"null," +
 						species_id + "," +
 						site_id + "," +
@@ -999,13 +998,13 @@ class Observation{
 						image_id + "," +
 						"'" + time + "'," +
 						"'" + note + "'," +
-						"9);";
+						SyncDBHelper.SYNCED_NO + ");";
 			}else{
-				query = "UPDATE downloaded_observation SET " +
+				query = "UPDATE my_observation SET " +
 						"image_id=" + image_id + "," +
 						"time='" + time + "'" + "," +
 						"note='" + note + "'" + "," +
-						"synced=9 " +
+						SyncDBHelper.SYNCED_NO + " " + 
 						"WHERE _id=" + obs_id + ";"; 
 			}
 			db.execSQL(query);

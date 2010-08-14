@@ -21,7 +21,7 @@
       
     <application android:icon="@drawable/icon" 
     android:label="@string/app_name"
-    android:debuggable="false">
+    android:debuggable="true">
  
  <activity android:name="firstActivity" android:label="@string/app_name">
  <intent-filter>
@@ -38,13 +38,11 @@
     		android:configChanges="orientation|keyboardHidden">
     		
     	</activity>
-    <activity android:label="Helloscr" android:name=".Helloscr" android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
-	
-	<activity android:name="PlantList" android:label="PlantList" android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
+<activity android:label="Helloscr" android:name=".Helloscr" android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
+<activity android:name="PlantList" android:label="PlantList" android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
 <activity android:name="AddPlant" android:label="AddPlant" android:theme="@android:style/Theme.Light"></activity>
-
 <activity android:name="PlantInfo" android:theme="@android:style/Theme.Light" android:label="PlantInfo" android:configChanges="keyboardHidden|orientation"></activity>
-
+<activity android:name="Sync" android:label="Sync" android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
 </application>
     <uses-sdk android:minSdkVersion="3" />
 </manifest> 

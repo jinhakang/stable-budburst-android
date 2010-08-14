@@ -48,10 +48,10 @@ public class PlantList extends ListActivity {
 	private ArrayList<PlantItem> user_species_list;
 	
 	//MENU contants
-	final private int MENU_ADD_PLANT = 0;
-	final private int MENU_ADD_SITE = 1;
-	final private int MENU_LOGOUT = 2;
-	final private int MENU_SYNC = 3;
+	final private int MENU_ADD_PLANT = 1;
+	final private int MENU_ADD_SITE = 2;
+	final private int MENU_LOGOUT = 3;
+	final private int MENU_SYNC = 4;
 	
 	ArrayList<PlantItem> arPlantItem;
 	
@@ -60,20 +60,20 @@ public class PlantList extends ListActivity {
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.plantlist);
+
+	}
+	
+	public void onResume(){
+		super.onResume();
 		MyList = getListView();
 		
 		//Initiate ArrayList
 		user_species_list = new ArrayList<PlantItem>();
-
 		
 		//Retrieve username and password
 		pref = getSharedPreferences("userinfo",0);
 		username = pref.getString("Username","");
 		password = pref.getString("Password","");
-		
-
-		
-		
 		
 		//My plant button
 		Button buttonMyplant = (Button)findViewById(R.id.myplant);
@@ -104,11 +104,7 @@ public class PlantList extends ListActivity {
 	 		Log.e(TAG, ioe.toString());
 	 		throw new Error("Unable to create database");
 	 	}
-	 	
-
-
-	 	
-	 
+ 
 	 	try {
 	 		staticDBHelper.openDataBase();
 	 	}catch(SQLException sqle){
@@ -119,23 +115,12 @@ public class PlantList extends ListActivity {
 
 		ArrayList<String> user_station_name = new ArrayList<String>();
 		ArrayList<Integer> user_station_id = new ArrayList<Integer>();
-		SeparatedListAdapter MyAdapter = new SeparatedListAdapter(this);
 		Cursor cursor;
 
 		try{
 						
-			cursor = syncDB.rawQuery("SELECT site_name, site_id FROM species_in_mystation GROUP BY site_name;",null);
-			
-//			//Check if user site is 0 or not
-//			if(cursor.getCount() == 0){
-//				Intent intent = new Intent(PlantList.this, Helloscr.class);
-//				startActivity(intent);
-//				Toast.makeText(PlantList.this, "You don't have a site. Please add a site on website.", Toast.LENGTH_SHORT).show();
-//				finish();
-//				cursor.close();
-//				syncDB.close();
-//				return;
-//			}
+			//TODO : Check if user site is none.
+			cursor = syncDB.rawQuery("SELECT site_name, site_id FROM my_plants GROUP BY site_name;",null);
 			
 			while(cursor.moveToNext()){
 				user_station_name.add(cursor.getString(0));
@@ -149,10 +134,9 @@ public class PlantList extends ListActivity {
 				PlantItem pi;
 				
 				//Retrieves plants from each site.
-				Cursor cursor2 = syncDB.rawQuery("SELECT species_id FROM species_in_mystation " +
+				Cursor cursor2 = syncDB.rawQuery("SELECT species_id FROM my_plants " +
 						"WHERE site_name = '" + user_station_name.get(i) + "';",null);
-				
-				
+
 				while(cursor2.moveToNext()){
 					String qry = "SELECT _id, species_name, common_name, protocol_id FROM species WHERE _id = " + cursor2.getInt(0) + ";";
 					Cursor cursor3 = staticDB.rawQuery(qry, null);
@@ -165,69 +149,24 @@ public class PlantList extends ListActivity {
 					pi = new PlantItem(resID, cursor3.getString(2), cursor3.getString(1)+" (" + user_station_name.get(i) + ")"
 							, cursor3.getInt(0), user_station_id.get(i), cursor3.getInt(3));
 					arPlantItem.add(pi);
-					
 					cursor3.close();
 				}
 				cursor2.close();
-				
-//				//MyAdapter.addSection(user_station_name.get(i), mylistapdater);
-//				user_species_list.add(new PlantItem(0,"","",0));
-//				//To detect what user clicks
-//				for(int k=0; k<arPlantItem.size(); k++)
-//				{
-//					user_species_list.add(arPlantItem.get(k));
-//				}
-	
 			}
 			//To synchronize user_species_list with actual listview contents order.
 			MyListAdapter mylistapdater = new MyListAdapter(this, R.layout.plantlist_item, arPlantItem);
 			MyList.setAdapter(mylistapdater);
-			
 		}catch(Exception e){
 			Log.e(TAG, e.toString());
 		}
 		finally{
-
-			//staticDB.close();
-			//syncDB.close();
 			staticDBHelper.close();
 			syncDBHelper.close();
 		}
-//		while(cursor.moveToNext()){
-//		result += cursor.getString(0) + " " + cursor.getString(1) + " " + 
-//		cursor.getString(2) + " " + cursor.getString(3) + " " + 
-//		cursor.getInt(4) + " " + cursor.getString(5) + " " + cursor.getString(6)
-//		+ "\n";
-//		}
-//		
-		
-//		pi = new PlantItem(R.drawable.s1, "First Flower", "Common Lilac",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s2, "Second Flower", "Lily",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s3, "Third Flower", "Rose",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s4, "Fourth Flower", "Common Lilac",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s5, "Fifth Flower", "Common Lilac",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s1, "First Flower", "Common Lilac",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s2, "Second Flower", "Lily",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s3, "Third Flower", "Rose",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s4, "Fourth Flower", "Common Lilac",1); arPlantItem.add(pi);
-//		pi = new PlantItem(R.drawable.s5, "Fifth Flower", "Common Lilac",1); arPlantItem.add(pi);
-		
-		//SeparatedListAdapter MyAdapter = new SeparatedListAdapter(this);
-		//MyAdapter.addSection("Top ten", new MyListAdapter(this, R.layout.plantlist_item, arItem));
-		//MyAdapter.addSection("Top 20", new MyListAdapter(this, R.layout.plantlist_item, arItem));
-		//MyListAdapter MyAdapter = new MyListAdapter(this, R.layout.plantlist_item, arItem);
-		
-		//ListView MyList;
-		//MyList=(ListView)findViewById(R.id.list);
-		//MyList.setAdapter(MyAdapter);
-		
 	}
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id){
-	 //Object temp = l.getItemAtPosition(position).toString();
- 		//Toast.makeText(PlantList.this, arPlantItem.get(position).SpeciesID + 
- 		//arPlantItem.get(position).SpeciesName + arPlantItem.get(position).CommonName + arPlantItem.get(position).siteID, Toast.LENGTH_LONG).show();
 		Intent intent = new Intent(this, PlantInfo.class);
 		intent.putExtra("species_id", arPlantItem.get(position).SpeciesID);
 		intent.putExtra("site_id", arPlantItem.get(position).siteID);
@@ -235,71 +174,6 @@ public class PlantList extends ListActivity {
 		startActivity(intent);
 	}
 		
-//	/////////////////////////////////////////////////////////////
-//	//Menu option
-//	public boolean onCreateOptionsMenu(Menu menu){
-//		super.onCreateOptionsMenu(menu);
-//		
-//		SubMenu addButton = menu.addSubMenu("Add")
-//			.setIcon(android.R.drawable.ic_menu_add);
-//		addButton.add(0,MENU_ADD_PLANT,0,"Add Plant");
-//		addButton.add(0,MENU_ADD_SITE,0,"Add Site");		
-//		
-//		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
-//		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
-//				
-//		return true;
-//	}
-//	
-//	//Menu option selection handling
-//	public boolean onOptionsItemSelected(MenuItem item){
-//		Intent intent;
-//		switch(item.getItemId()){
-//		case MENU_SYNC:
-//			
-//			return true;
-//		case MENU_ADD_PLANT:
-//			intent = new Intent(this, AddPlant.class);
-//			startActivity(intent);
-//			return true;
-//		case MENU_ADD_SITE:
-//			Toast.makeText(this,"Sorry, it's coming soon..",Toast.LENGTH_SHORT).show();
-//			return true;
-//		case MENU_LOGOUT:
-//			new AlertDialog.Builder(this)
-//				.setTitle("Question")
-//				.setMessage("You might lose your unsynced data if you log out. Do you want to log out?")
-//				.setPositiveButton("Yes",mClick)
-//				.setNegativeButton("no",mClick)
-//				.show();
-//			return true;
-//		}
-//		return false;
-//	}
-//	
-//	//Dialog confirm message if user clicks logout button
-//	DialogInterface.OnClickListener mClick =
-//		new DialogInterface.OnClickListener(){
-//		public void onClick(DialogInterface dialog, int whichButton){
-//			if(whichButton == DialogInterface.BUTTON1){
-//				
-//				SharedPreferences.Editor edit = pref.edit();				
-//				edit.putString("Username","");
-//				edit.putString("Password","");
-//				edit.commit();
-//				
-//				Intent intent = new Intent(PlantList.this, Login.class);
-//				startActivity(intent);
-//				finish();
-//			}else{
-//			}
-//		}
-//	};
-//	//Menu option
-//	/////////////////////////////////////////////////////////////
-//
-//}
-
 	/////////////////////////////////////////////////////////////
 	//Menu option
 	public boolean onCreateOptionsMenu(Menu menu){
@@ -312,7 +186,7 @@ public class PlantList extends ListActivity {
 		
 		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
 		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
-				
+			
 		return true;
 	}
 	
@@ -348,6 +222,7 @@ public class PlantList extends ListActivity {
 		}
 		return false;
 	}
+	/////////////////////////////////////////////////////////////////////////////////
 	
 	//Dialog confirm message if user clicks logout button
 	DialogInterface.OnClickListener mClick =
@@ -411,7 +286,6 @@ class PlantItem{
 	int siteID;
 	int protocolID;
 }
-
 
 //Adapters:MyListAdapter and SeparatedAdapter
 class MyListAdapter extends BaseAdapter{

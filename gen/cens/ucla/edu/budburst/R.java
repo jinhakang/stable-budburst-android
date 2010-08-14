@@ -232,20 +232,22 @@ public final class R {
         public static final int white_bg_rounded_corners=0x7f03000d;
     }
     public static final class string {
-        public static final int add_plant_URL=0x7f04000a;
-        public static final int add_site_URL=0x7f040008;
+        public static final int add_plant_URL=0x7f04000c;
+        public static final int add_site_URL=0x7f04000a;
         public static final int app_name=0x7f040000;
-        public static final int button_bar1=0x7f04000b;
-        public static final int button_bar2=0x7f04000c;
-        public static final int button_bar3=0x7f04000d;
-        public static final int download_obs_image_URL=0x7f040009;
+        public static final int authentication_URL=0x7f040007;
+        public static final int button_bar1=0x7f04000d;
+        public static final int button_bar2=0x7f04000e;
+        public static final int button_bar3=0x7f04000f;
+        public static final int download_obs_image_URL=0x7f04000b;
+        public static final int get_my_sites_URL=0x7f040005;
         public static final int get_my_species_in_my_station_URL=0x7f040004;
-        public static final int get_observation_URL=0x7f040005;
-        public static final int get_user_spcies_URL=0x7f040006;
+        public static final int get_observation_URL=0x7f040006;
+        public static final int get_user_spcies_URL=0x7f040008;
         public static final int instruction=0x7f040003;
         public static final int instruction_old=0x7f040002;
         public static final int signupURL=0x7f040001;
-        public static final int submit_question=0x7f04000e;
-        public static final int upload_observation_URL=0x7f040007;
+        public static final int submit_question=0x7f040010;
+        public static final int upload_observation_URL=0x7f040009;
     }
 }

@@ -180,7 +180,7 @@ public class AddPlant extends ListActivity{
 		SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
 		
 		try{
-			Cursor cursor = syncDB.rawQuery("SELECT species_id FROM species_in_mystation " +
+			Cursor cursor = syncDB.rawQuery("SELECT species_id FROM my_plants " +
 					"WHERE species_id = " + speciesid +
 					" AND site_id = " + siteid, null);
 			if(cursor.getCount() > 0){
@@ -206,7 +206,7 @@ public class AddPlant extends ListActivity{
 			SyncDBHelper syncDBHelper = new SyncDBHelper(this);
 			SQLiteDatabase syncDB = syncDBHelper.getWritableDatabase();
 			
-			syncDB.execSQL("INSERT INTO species_in_mystation VALUES(" +
+			syncDB.execSQL("INSERT INTO my_plants VALUES(" +
 					"null," +
 					speciesid + "," +
 					siteid + "," +
@@ -233,7 +233,7 @@ public class AddPlant extends ListActivity{
 		SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase(); 
 		
 		//Rereive syncDB and add them to arUserPlatList arraylist
-		Cursor cursor = syncDB.rawQuery("SELECT site_name, site_id  FROM species_in_mystation GROUP BY site_name;",null);
+		Cursor cursor = syncDB.rawQuery("SELECT site_name, site_id  FROM my_plants GROUP BY site_name;",null);
 		while(cursor.moveToNext()){
 			localMapUserSiteNameID.put(cursor.getString(0), cursor.getInt(1));
 		}
