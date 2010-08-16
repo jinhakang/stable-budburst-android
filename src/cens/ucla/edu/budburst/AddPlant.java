@@ -78,48 +78,44 @@ public class AddPlant extends ListActivity{
 		while(itr.hasNext()){
 			Log.d(TAG, itr.next());
 		}
-//		
-//		
-//		ArrayList<PlantItem> arPlantItem = new ArrayList<PlantItem>();
-//		
-//		MyListAdapter myListAdapter = new MyListAdapter(this, R.layout.plantlist_item, arPlantItem);
-//
-//		PlantItem pi;
-//		
 		
-////		PlantItem pi;
-////		pi = new PlantItem(R.drawable.s1, "First Flower", "Common Lilac",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s2, "Second Flower", "Lily",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s3, "Third Flower", "Rose",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s4, "Fourth Flower", "Common Lilac",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s5, "Fifth Flower", "Common Lilac",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s1, "First Flower", "Common Lilac",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s2, "Second Flower", "Lily",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s3, "Third Flower", "Rose",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s4, "Fourth Flower", "Common Lilac",1); arItem.add(pi);
-////		pi = new PlantItem(R.drawable.s5, "Fifth Flower", "Common Lilac",1); arItem.add(pi);
-//		
-//		SeparatedListAdapter MyAdapter = new SeparatedListAdapter(this);
-//		MyAdapter.addSection("Top ten", new MyListAdapter(this, R.layout.plantlist_item, arItem));
-//		MyAdapter.addSection("Top 20", new MyListAdapter(this, R.layout.plantlist_item, arItem));
-//		//MyListAdapter MyAdapter = new MyListAdapter(this, R.layout.plantlist_item, arItem);
+	}
+	
+	public String[] getUserSite(){
 		
-//		ListView MyList;
-//		MyList=(ListView)findViewById(R.id.list);
-//		MyList.setAdapter(MyAdapter);
-		
+		SyncDBHelper syncDBHelper = new SyncDBHelper(this);
+		SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
+		String[] arrUsersite;
+		try{
+			Cursor cursor = syncDB.rawQuery("SELECT site_name FROM my_sites;", null);
+			
+			arrUsersite = new String[cursor.getCount()];
+			int i=0;
+			while(cursor.moveToNext()){
+				arrUsersite[i++] = cursor.getString(0);
+			}
+			cursor.close();
+			return arrUsersite;
+		}
+		catch(Exception e){
+			Log.e(TAG,e.toString());
+			return null;
+		}
+		finally{
+			syncDBHelper.close();
+		}
 	}
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id){
-	 //Object temp = l.getItemAtPosition(position).toString();
- 		//Toast.makeText(PlantList.this, arPlantItem.get(position).SpeciesID + 
- 		//arPlantItem.get(position).SpeciesName + arPlantItem.get(position).CommonName + arPlantItem.get(position).siteID, Toast.LENGTH_LONG).show();		
 		
 		new_plant_species_id = arPlantList.get(position).SpeciesID;
-		seqUserSite = mapUserSiteNameID.keySet().toArray(new String[0]);
 		
-
+		//Retreive user sites from data base.
+		//seqUserSite = mapUserSiteNameID.keySet().toArray(new String[0]);
+		seqUserSite = getUserSite();
+		
+		//Pop up choose site dialog box
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Choose site")
 		.setSingleChoiceItems(seqUserSite, -1, new DialogInterface.OnClickListener() {
@@ -133,10 +129,8 @@ public class AddPlant extends ListActivity{
 			}
 		})
 		.setPositiveButton("Select", new DialogInterface.OnClickListener() {
-			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				
 				if(new_plant_site_id == null){
 					Toast.makeText(AddPlant.this, " Please select site.", Toast.LENGTH_SHORT).show();
 				}
@@ -152,11 +146,7 @@ public class AddPlant extends ListActivity{
 							Toast.makeText(AddPlant.this, "Database error.", Toast.LENGTH_SHORT).show();
 						}
 					}
-							
-					
 				}
-				
-				
 			}
 		})
 		.setNegativeButton("Cancel", null)
@@ -212,9 +202,8 @@ public class AddPlant extends ListActivity{
 					siteid + "," +
 					"'" + sitename + "',"+
 					"0,"+
-					"9);"
+					SyncDBHelper.SYNCED_NO + ");"
 					);
-			//syncDB.close();
 			syncDBHelper.close();
 			return true;
 		}
@@ -233,7 +222,7 @@ public class AddPlant extends ListActivity{
 		SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase(); 
 		
 		//Rereive syncDB and add them to arUserPlatList arraylist
-		Cursor cursor = syncDB.rawQuery("SELECT site_name, site_id  FROM my_plants GROUP BY site_name;",null);
+		Cursor cursor = syncDB.rawQuery("SELECT site_name, site_id FROM my_sites;",null);
 		while(cursor.moveToNext()){
 			localMapUserSiteNameID.put(cursor.getString(0), cursor.getInt(1));
 		}

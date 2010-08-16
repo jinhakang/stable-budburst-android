@@ -60,6 +60,7 @@ public class Sync extends Activity{
 	final private int NOT_FINISH_INT = 0;
 	
 	public static int SERVER_ERROR = -99;
+	public static int NETWORK_ERROR = 0;
 	
 	int mValue;
 	TextView mText;
@@ -168,9 +169,9 @@ public class Sync extends Activity{
 				finish();
 				return true;
 			case MENU_SYNC:
-				SharedPreferences.Editor edit = pref.edit();				
-				edit.putString("Synced","true");
-				edit.commit();
+//				SharedPreferences.Editor edit = pref.edit();				
+//				edit.putString("Synced","true");
+//				edit.commit();
 				doSync();
 				return true;
 			case MENU_LOGOUT:
@@ -187,7 +188,7 @@ public class Sync extends Activity{
 	/////////////////////////////////////////////////////////////////////////////////
 	
 
-	//Dialog generate
+	//Progress dialog generate
 	protected Dialog onCreateDialog(int id){
 		switch(id){
 		case 0:
@@ -221,8 +222,10 @@ public class Sync extends Activity{
 			
 			Message msgToThread = Message.obtain();
 			
-			if(mQuit == true)
+			if(mQuit == true){
+				dismissDialog(0);
 				return;
+			}
 			
 			if(msg.what == SERVER_ERROR){
 				String error_message = (String)msg.obj;
@@ -232,7 +235,10 @@ public class Sync extends Activity{
 					edit.putString("Username","");
 					edit.putString("Password","");
 					edit.commit();
-
+					
+					Toast.makeText(Sync.this, "Message from server:\n" 
+							+ error_message, Toast.LENGTH_LONG).show();
+					
 					Intent intent = new Intent(Sync.this,Login.class);
 					startActivity(intent);
 					finish();
@@ -242,7 +248,7 @@ public class Sync extends Activity{
 				removeDialog(0);
 				Toast.makeText(Sync.this, "Message from server:\n" 
 						+ error_message, Toast.LENGTH_LONG).show();
-			}else if(msg.what < 0){
+			}else if(msg.what < NETWORK_ERROR){
 				dismissDialog(0);
 				removeDialog(0);
 				Toast.makeText(Sync.this, "Network error occurs. Please " +
@@ -470,9 +476,10 @@ class doSyncThread extends Thread{
 		    	//Open database cursor
 		    	query =	"SELECT species_id, site_id " +
 		    			"FROM my_plants " +
-		    			"WHERE synced=" + SyncDBHelper.SYNCED_YES + ";";
+		    			"WHERE synced=" + SyncDBHelper.SYNCED_NO + ";";
 				cursor = syncRDB.rawQuery(query, null);
 			    
+				Log.d(TAG, String.valueOf(cursor.getCount()));
 				//Check if returned data is empty, then break switch statement
 				if(cursor.getCount() == 0){
 			        cursor.close();
@@ -480,9 +487,15 @@ class doSyncThread extends Thread{
 				}
 				
 				while(cursor.moveToNext()){
+					String a = cursor.getString(0);
+					String b = cursor.getString(1);
 					serverResponse = 
-						SyncNetworkHelper.upload_new_plant(username, password, context, 
-								cursor.getString(0), cursor.getString(1));
+					SyncNetworkHelper.upload_new_plant(username, password, context, 
+							a, b);
+
+//					serverResponse = 
+//						SyncNetworkHelper.upload_new_plant(username, password, context, 
+//								cursor.getString(0), cursor.getString(1));
 					if(serverResponse == null){
 						//Error occurs. Quit thread. Notify this to main class.
 						msgToMain.what = UPLOAD_ADDED_PLANT * -1;
@@ -494,8 +507,8 @@ class doSyncThread extends Thread{
 					try{
 						jsonobj = new JSONObject(serverResponse);
 						if(jsonobj.getBoolean("success") == false){
-							msg.what = Sync.SERVER_ERROR;
-							msg.obj = jsonobj.getString("error_message");
+							msgToMain.what = Sync.SERVER_ERROR;
+							msgToMain.obj = jsonobj.getString("error_message");
 							mLoop.quit();
 							break;
 						}
@@ -538,8 +551,8 @@ class doSyncThread extends Thread{
 					try{
 						jsonobj = new JSONObject(serverResponse);
 						if(jsonobj.getBoolean("success") == false){
-							msg.what = Sync.SERVER_ERROR;
-							msg.obj = jsonobj.getString("error_message");
+							msgToMain.what = Sync.SERVER_ERROR;
+							msgToMain.obj = jsonobj.getString("error_message");
 							mLoop.quit();
 							break;
 						}
@@ -563,7 +576,8 @@ class doSyncThread extends Thread{
 				msgToMain.what = DOWNLOAD_USER_STATION;
 		    	msgToMain.arg1 = mProgressVal + 5;
 		    	
-				serverResponse = SyncNetworkHelper.download_json(context.getString(R.string.get_my_sites_URL)
+				serverResponse = SyncNetworkHelper.download_json(
+						context.getString(R.string.get_my_sites_URL)
 						+"&username="+ username	+"&password="+ password);
 				if(serverResponse == null){
 					msgToMain.what = DOWNLOAD_USER_STATION * -1;
@@ -574,8 +588,8 @@ class doSyncThread extends Thread{
 				try{
 					jsonobj = new JSONObject(serverResponse);
 					if(jsonobj.getBoolean("success") == false){
-						msg.what = Sync.SERVER_ERROR;
-						msg.obj = jsonobj.getString("error_message");
+						msgToMain.what = Sync.SERVER_ERROR;
+						msgToMain.obj = jsonobj.getString("error_message");
 						mLoop.quit();
 						break;
 					}
@@ -584,8 +598,16 @@ class doSyncThread extends Thread{
 					Log.d(TAG, "DOWNLOAD_USER_STATION: failed");
 				}
 				
+				//when serverResponse 'success' is true
 				try{
 					jsonobj = new JSONObject(serverResponse);
+					
+					if(jsonobj.getString("results").equals("USER SITE LIST IS EMPTY")){
+						//User site list is empty. Later plant list activity prompts user
+						// to add new site.
+						break;
+					}
+					
 					jsonresult = new JSONArray(jsonobj.getString("results"));
 					syncWDB.execSQL("DELETE FROM my_sites;");
 					for(int i=0; i<jsonresult.length(); i++){
@@ -627,9 +649,15 @@ class doSyncThread extends Thread{
 					
 					//Server response check
 					if(jsonobj.getBoolean("success") == false){
-						msg.what = Sync.SERVER_ERROR;
-						msg.obj = jsonobj.getString("error_message");
+						msgToMain.what = Sync.SERVER_ERROR;
+						msgToMain.obj = jsonobj.getString("error_message");
 						mLoop.quit();
+						break;
+					}
+					
+					if(jsonobj.getString("results").equals("USER PLANT LIST IS EMPTY")){
+						//User plant list is empty. Later PlantList activity prompts user
+						// to add new plant.
 						break;
 					}
 		
@@ -671,8 +699,8 @@ class doSyncThread extends Thread{
 					
 					//Server response check
 					if(jsonobj.getBoolean("success") == false){
-						msg.what = Sync.SERVER_ERROR;
-						msg.obj = jsonobj.getString("error_message");
+						msgToMain.what = Sync.SERVER_ERROR;
+						msgToMain.obj = jsonobj.getString("error_message");
 						mLoop.quit();
 						break;
 					}

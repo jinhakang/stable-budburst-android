@@ -15,7 +15,7 @@ public class firstActivity extends Activity{
 		
 		//Check login
 		if(	!(pref.getString("Username","").equals("")) && !(pref.getString("Password","").equals(""))){
-			if(synced == "true"){
+			if(synced.equals("true")){
 				Intent intent = new Intent(firstActivity.this, PlantList.class);
 				startActivity(intent);
 				finish();

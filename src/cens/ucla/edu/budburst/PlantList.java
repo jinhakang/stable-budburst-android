@@ -93,7 +93,6 @@ public class PlantList extends ListActivity {
 		buttonMyplant.setSelected(true);
 		
 		arPlantItem = new ArrayList<PlantItem>();
-		
 		syncDBHelper = new SyncDBHelper(PlantList.this);
 		SQLiteDatabase syncDB  = syncDBHelper.getReadableDatabase();
 		
@@ -118,10 +117,24 @@ public class PlantList extends ListActivity {
 		Cursor cursor;
 
 		try{
-						
-			//TODO : Check if user site is none.
-			cursor = syncDB.rawQuery("SELECT site_name, site_id FROM my_plants GROUP BY site_name;",null);
+
+			//Check user site and user species is empty.			
+			cursor = syncDB.rawQuery("SELECT site_id FROM my_sites;", null);
+			Log.d(TAG, String.valueOf(cursor.getCount()));
+			if(cursor.getCount() == 0)
+			{
+				cursor.close();
+				//Add site
+				Intent intent = new Intent(PlantList.this, AddSite.class);
+				startActivity(intent);
+				finish();
+			}else{
+				cursor.close();
+			}
 			
+			//Retreive site name and site id from my_plant table to draw plant list.
+			cursor = syncDB.rawQuery("SELECT site_name, site_id FROM my_plants GROUP BY site_name;",null);
+
 			while(cursor.moveToNext()){
 				user_station_name.add(cursor.getString(0));
 				user_station_id.add(cursor.getInt(1));
@@ -200,13 +213,12 @@ public class PlantList extends ListActivity {
 				finish();
 				return true;
 			case MENU_ADD_SITE:
-				intent = new Intent (Intent.ACTION_VIEW);
-				intent.setData(Uri.parse(getString(R.string.add_site_URL)));
+				intent = new Intent (PlantList.this, AddSite.class);
 				startActivity(intent);
 				finish();
 				return true;
 			case MENU_SYNC:
-				intent = new Intent(PlantList.this, Helloscr.class);
+				intent = new Intent(PlantList.this, Sync.class);
 				intent.putExtra("sync_instantly", true);
 				startActivity(intent);
 				finish();
