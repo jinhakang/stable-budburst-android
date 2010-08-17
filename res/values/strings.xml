@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Project Budburst</string>
-    <string name="signupURL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register.php</string>
+    <string name="signupURL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register_mobile</string>
     <string name="instruction_old">You have no plants yet, or you need to syncronize your phone.\n\n (1) Start by adding a plant to an existing site (MENU &gt; Add Plant). \n\n (2) Please synchronize your phone with the database (Menu &gt; Sync).  If this fails, you may have connectivity problems.</string>
     <string name="instruction">You need to synchronize your phone with Project Budburst database.\n\n 
      (1) Please click Sync button. You can find Sync button at any page by clicking MENU button.\n\n
@@ -38,5 +38,58 @@
     <string name="button_bar2"> Flowers</string>
     <string name="button_bar3"> Fruits</string>
     <string name="submit_question">You have unsubmitted data. Do you want to submit it?</string>
+    <string-array name="state">
+       <item>AL</item> 
+       <item>AK</item> 
+       <item>AZ</item> 
+       <item>AR</item> 
+       <item>CA</item> 
+       <item>CO</item> 
+       <item>CT</item> 
+       <item>DE</item> 
+       <item>DC</item> 
+       <item>FL</item> 
+       <item>GA</item> 
+       <item>ID</item> 
+       <item>IL</item> 
+       <item>IN</item> 
+       <item>IA</item> 
+       <item>KS</item> 
+       <item>KY</item> 
+       <item>LA</item> 
+       <item>ME</item> 
+       <item>MD</item> 
+       <item>MA</item> 
+       <item>MI</item> 
+       <item>MN</item> 
+       <item>MS</item> 
+       <item>MO</item> 
+       <item>MT</item> 
+       <item>NE</item> 
+       <item>NV</item> 
+       <item>NH</item> 
+       <item>NJ</item> 
+       <item>NM</item> 
+       <item>NY</item> 
+       <item>NC</item> 
+       <item>ND</item> 
+       <item>OH</item> 
+       <item>OK</item> 
+       <item>OR</item> 
+       <item>PA</item> 
+       <item>RI</item> 
+       <item>SC</item> 
+       <item>SD</item> 
+       <item>TN</item> 
+       <item>TX</item> 
+       <item>UT</item> 
+       <item>VT</item> 
+       <item>VA</item> 
+       <item>WA</item> 
+       <item>WV</item> 
+       <item>WI</item> 
+       <item>WY</item> 
+    </string-array>
+    
     
 </resources>

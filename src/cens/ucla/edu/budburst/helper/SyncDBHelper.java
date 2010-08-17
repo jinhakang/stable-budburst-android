@@ -12,7 +12,7 @@ public class SyncDBHelper extends SQLiteOpenHelper{
 	public static final int SYNCED_NO = 9;
 	
 	public SyncDBHelper(Context context){
-		super(context, "syncBudburst.db", null, 10);
+		super(context, "syncBudburst.db", null, 11);
 	}
 	
 	public void onCreate(SQLiteDatabase db){
@@ -48,10 +48,10 @@ public class SyncDBHelper extends SQLiteOpenHelper{
 		//This table stores site list of user.
 		db.execSQL("CREATE TABLE my_sites (" +
 				"_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-				"site_id NUMERIC," +
+				"site_id TEXT," +
 				"site_name TEXT," +
-				"latitude NUMERIC," +
-				"longitude NUMERIC," +
+				"latitude TEXT," +
+				"longitude TEXT," +
 				"city TEXT," +
 				"state TEXT," +
 				"zipcode NUMERIC," +

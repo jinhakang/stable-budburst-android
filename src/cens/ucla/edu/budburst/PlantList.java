@@ -215,7 +215,7 @@ public class PlantList extends ListActivity {
 			case MENU_ADD_SITE:
 				intent = new Intent (PlantList.this, AddSite.class);
 				startActivity(intent);
-				finish();
+				//finish();
 				return true;
 			case MENU_SYNC:
 				intent = new Intent(PlantList.this, Sync.class);
