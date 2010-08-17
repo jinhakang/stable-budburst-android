@@ -47,6 +47,19 @@
 	        android:layout_weight="0.5"
 	        android:text="Shared Plants"/>
 	</LinearLayout> 
+	
+	<TextView
+		android:id="@+id/instruction"
+		android:layout_below="@+id/two_button"
+		android:textSize="17dip"
+		android:text="@string/no_site_no_species_instruction"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="10dip"
+		android:visibility="gone"		
+		>
+	</TextView>
+	
 	<ListView
 		android:id="@android:id/list"
 		android:layout_below="@+id/two_button"

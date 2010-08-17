@@ -118,19 +118,42 @@ public class PlantList extends ListActivity {
 
 		try{
 
-			//Check user site and user species is empty.			
+			//Check user site is empty.			
 			cursor = syncDB.rawQuery("SELECT site_id FROM my_sites;", null);
 			Log.d(TAG, String.valueOf(cursor.getCount()));
 			if(cursor.getCount() == 0)
 			{
 				cursor.close();
-				//Add site
-				Intent intent = new Intent(PlantList.this, AddSite.class);
-				startActivity(intent);
-				finish();
+//				Intent intent = new Intent(PlantList.this, AddSite.class);
+//				startActivity(intent);
+//				finish();
+				
+				TextView instruction = (TextView)findViewById(R.id.instruction);
+				instruction.setVisibility(View.VISIBLE);
+				MyList.setVisibility(View.GONE); 
+				return;
 			}else{
 				cursor.close();
 			}
+			
+			//Check user plant is empty.			
+			cursor = syncDB.rawQuery("SELECT site_id FROM my_plants;", null);
+			Log.d(TAG, String.valueOf(cursor.getCount()));
+			if(cursor.getCount() == 0)
+			{
+				cursor.close();
+//				Intent intent = new Intent(PlantList.this, AddSite.class);
+//				startActivity(intent);
+//				finish();
+				
+				TextView instruction = (TextView)findViewById(R.id.instruction);
+				instruction.setVisibility(View.VISIBLE);
+				MyList.setVisibility(View.GONE); 
+				return;
+			}else{
+				cursor.close();
+			}			
+			
 			
 			//Retreive site name and site id from my_plant table to draw plant list.
 			cursor = syncDB.rawQuery("SELECT site_name, site_id FROM my_plants GROUP BY site_name;",null);
@@ -194,8 +217,9 @@ public class PlantList extends ListActivity {
 		
 		SubMenu addButton = menu.addSubMenu("Add")
 			.setIcon(android.R.drawable.ic_menu_add);
+		addButton.add(0,MENU_ADD_SITE,0,"Add Site");
 		addButton.add(0,MENU_ADD_PLANT,0,"Add Plant");
-		addButton.add(0,MENU_ADD_SITE,0,"Add Site");		
+				
 		
 		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
 		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);

@@ -21,6 +21,14 @@
     http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?authentication
     </string>
     
+    <string name="no_site_no_species_instruction">
+    \nNo site and plant has been found. If this is your first login, please follow instruction below to add sites and plants.\n
+    \n
+    (1) Add your site. \nClick MENU->ADD->ADD SITE \n\n
+    (2) Add your plant. \nClick MENU->ADD->ADD PLANT \n\n
+    (3) You will see your plant list in this page.\n
+    
+    </string>
     
     <string name="get_user_spcies_URL">http://www.google.com</string>
     <string name="upload_observation_URL">http://www.naver.com</string>

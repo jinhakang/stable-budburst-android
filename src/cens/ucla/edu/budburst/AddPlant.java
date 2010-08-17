@@ -16,6 +16,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import cens.ucla.edu.budburst.helper.StaticDBHelper;
 import cens.ucla.edu.budburst.helper.SyncDBHelper;
@@ -37,9 +38,26 @@ public class AddPlant extends ListActivity{
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.addplant);
-		
 		setTitle("Add plant");
 		
+		//Check if site table is empty
+		SyncDBHelper syncDBHelper = new SyncDBHelper(AddPlant.this);
+		SQLiteDatabase syncDB = syncDBHelper.getReadableDatabase();
+		
+		Cursor cursor = syncDB.rawQuery("SELECT site_id FROM my_sites;", null);
+		Log.d(TAG, String.valueOf(cursor.getCount()));
+		if(cursor.getCount() == 0)
+		{
+			Toast.makeText(AddPlant.this, "Please add your site first.", 
+					Toast.LENGTH_LONG).show();
+			cursor.close();
+			Intent intent = new Intent(AddPlant.this, PlantList.class);
+			startActivity(intent);
+			finish();			
+			return;
+		}else{
+			cursor.close();
+		}
 		
 		//Get all plant list
 		//Open plant list db from static db
@@ -48,7 +66,7 @@ public class AddPlant extends ListActivity{
 		
 		//Rereive syncDB and add them to arUserPlatList arraylist
 		arPlantList = new ArrayList<PlantItem>();
- 		Cursor cursor = staticDB.rawQuery("SELECT _id, species_name, common_name FROM species ORDER BY common_name;",null);
+ 		cursor = staticDB.rawQuery("SELECT _id, species_name, common_name FROM species ORDER BY common_name;",null);
 		while(cursor.moveToNext()){
 			Integer id = cursor.getInt(0);
 			String species_name = cursor.getString(1);

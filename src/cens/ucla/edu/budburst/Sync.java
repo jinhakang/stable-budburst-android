@@ -142,10 +142,10 @@ public class Sync extends Activity{
 	public boolean onCreateOptionsMenu(Menu menu){
 		super.onCreateOptionsMenu(menu);
 		
-		SubMenu addButton = menu.addSubMenu("Add")
-			.setIcon(android.R.drawable.ic_menu_add);
-		addButton.add(0,MENU_ADD_PLANT,0,"Add Plant");
-		addButton.add(0,MENU_ADD_SITE,0,"Add Site");		
+//		SubMenu addButton = menu.addSubMenu("Add")
+//			.setIcon(android.R.drawable.ic_menu_add);
+//		addButton.add(0,MENU_ADD_PLANT,0,"Add Plant");
+//		addButton.add(0,MENU_ADD_SITE,0,"Add Site");		
 		
 		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
 		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
@@ -157,17 +157,17 @@ public class Sync extends Activity{
 	public boolean onOptionsItemSelected(MenuItem item){
 		Intent intent;
 		switch(item.getItemId()){
-			case MENU_ADD_PLANT:
-				intent = new Intent(Sync.this, AddPlant.class);
-				startActivity(intent);
-				finish();
-				return true;
-			case MENU_ADD_SITE:
-				intent = new Intent (Intent.ACTION_VIEW);
-				intent.setData(Uri.parse(getString(R.string.add_site_URL)));
-				startActivity(intent);
-				finish();
-				return true;
+//			case MENU_ADD_PLANT:
+//				intent = new Intent(Sync.this, AddPlant.class);
+//				startActivity(intent);
+//				finish();
+//				return true;
+//			case MENU_ADD_SITE:
+//				intent = new Intent (Intent.ACTION_VIEW);
+//				intent.setData(Uri.parse(getString(R.string.add_site_URL)));
+//				startActivity(intent);
+//				finish();
+//				return true;
 			case MENU_SYNC:
 //				SharedPreferences.Editor edit = pref.edit();				
 //				edit.putString("Synced","true");
@@ -696,6 +696,12 @@ class doSyncThread extends Thread{
 				//Parse response and insert it to DB
 				try{
 					jsonobj = new JSONObject(serverResponse);
+					
+					if(jsonobj.getString("results").equals("OBS LIST IS EMPTY")){
+						//User plant list is empty. Later PlantList activity prompts user
+						// to add new plant.
+						break;
+					}
 					
 					//Server response check
 					if(jsonobj.getBoolean("success") == false){

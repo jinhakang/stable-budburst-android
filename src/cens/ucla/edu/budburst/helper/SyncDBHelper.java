@@ -12,7 +12,7 @@ public class SyncDBHelper extends SQLiteOpenHelper{
 	public static final int SYNCED_NO = 9;
 	
 	public SyncDBHelper(Context context){
-		super(context, "syncBudburst.db", null, 11);
+		super(context, "syncBudburst.db", null, 12);
 	}
 	
 	public void onCreate(SQLiteDatabase db){
@@ -54,7 +54,7 @@ public class SyncDBHelper extends SQLiteOpenHelper{
 				"longitude TEXT," +
 				"city TEXT," +
 				"state TEXT," +
-				"zipcode NUMERIC," +
+				"zipcode TEXT," +
 				"country TEXT," +
 				"comments TEXT, " +
 				"synced NUMERIC);");

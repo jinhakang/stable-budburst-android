@@ -2,6 +2,7 @@ package cens.ucla.edu.budburst;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
@@ -11,10 +12,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemSelectedListener;
 import cens.ucla.edu.budburst.helper.SyncDBHelper;
 
 public class AddSite extends Activity{
@@ -26,6 +30,8 @@ public class AddSite extends Activity{
 	EditText sitename;
 	EditText comment;
 
+	ArrayAdapter<CharSequence> adspin;
+	String selectedState;
 	
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
@@ -51,8 +57,42 @@ public class AddSite extends Activity{
 		sitename = (EditText)this.findViewById(R.id.sitename);
 		comment = (EditText)this.findViewById(R.id.comment);
 		
-		Spinner spin = (Spinner)findViewById(R.id.state);
+		Spinner spinner = (Spinner)findViewById(R.id.state);
+		spinner.setPrompt("Choose your state.");
 		
+		adspin = ArrayAdapter.createFromResource(this, R.array.state, 
+				android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adspin);
+		spinner.setSelection(4);
+		
+		spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id){
+				selectedState = adspin.getItem(position).toString();
+				//Toast.makeText(AddSite.this, adspin.getItem(position), Toast.LENGTH_SHORT).show();
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		//Cancel button handler
+		Button cancelButton = (Button)this.findViewById(R.id.cancel);	
+		cancelButton.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				Intent intent = new Intent(AddSite.this, Sync.class);
+				startActivity(intent);
+				finish();
+			}
+		});
+		
+		
+		//Save button handler
 		Button saveButton = (Button)this.findViewById(R.id.save);	
 		saveButton.setOnClickListener(new View.OnClickListener() {
 			
@@ -74,7 +114,6 @@ public class AddSite extends Activity{
 					}
 	
 					//Check if site name is duplicated
-					
 					String query = "SELECT site_id FROM my_sites WHERE site_name='" 
 						+ usertype_stname + "';";
 					Cursor cursor = syncWDB.rawQuery(query, null);
@@ -92,17 +131,22 @@ public class AddSite extends Activity{
 					long epoch = System.currentTimeMillis()/1000;
 					query = "INSERT INTO my_sites VALUES(" +
 					"null, " + 
-					epoch + "," + 
+					"'" + epoch + "'," + 
 					"'" + usertype_stname + "'," +
 					"'" + latitude.getText().toString() + "'," + 
 					"'" + longitude.getText().toString() + "'," +
-					"," +
-					"," +
-					"," +
-					"," +
+					"''," +
+					"'" + selectedState + "'," +
+					"''," +
+					"''," +
 					"'" + comment.getText().toString() + "'," +
 					SyncDBHelper.SYNCED_NO + ");";
+					syncWDB.execSQL(query);
+					cursor.close();
 					
+					Intent intent = new Intent(AddSite.this, PlantList.class);
+					startActivity(intent);
+					finish();
 				}catch(Exception e){
 					Log.e(TAG, e.toString());
 				}finally{
