@@ -163,11 +163,25 @@ public class SyncNetworkHelper extends Activity{
 		    
         	httppost.setEntity(entity);
         	
+//	        // Execute HTTP Post Request  
+//        	HttpResponse response = httpclient.execute(httppost);
+//        	result = response.toString();
+//	        Log.d(TAG, response.toString());
+//	        return result;
 	        // Execute HTTP Post Request  
         	HttpResponse response = httpclient.execute(httppost);
-        	result = response.toString();
+        	BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent())); 
+        	StringBuilder result_str = new StringBuilder();
+			for(;;){
+				String line = rd.readLine();
+				if (line == null) 
+					break;
+				result_str.append(line+'\n');
+			}
+        	result = result_str.toString();
 	        Log.d(TAG, response.toString());
-	        return result;
+	        
+			return result;
 		}
 		catch(Exception e){
 			Log.e(TAG, e.toString());

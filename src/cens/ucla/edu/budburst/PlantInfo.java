@@ -500,7 +500,6 @@ public class PlantInfo extends Activity{
 		}catch(Exception e){
 			Log.e(TAG, e.toString());
 		}
-		
 	}
 	
 	public void showImageCameraButton(Observation current_obs){
@@ -541,7 +540,16 @@ public class PlantInfo extends Activity{
 			
 			ImageView img = (ImageView) this.findViewById(R.id.image);
 			img.setVisibility(View.VISIBLE);
-			img.setImageBitmap(BitmapFactory.decodeFile(image_path,options));
+			Bitmap resizedBitmap = BitmapFactory.decodeFile(image_path,options); 
+			img.setImageBitmap(resizedBitmap);
+			
+			try{
+				//FileOutputStream out = new FileOutputStream(BASE_PATH + "hellooo.jpg");
+				FileOutputStream out = new FileOutputStream(image_path);
+				resizedBitmap.compress(Bitmap.CompressFormat.JPEG,90,out);
+			}catch(Exception e){
+				Log.e(TAG,e.toString());
+			}
 		}
 		else{
 			ImageView img = (ImageView) this.findViewById(R.id.image);
