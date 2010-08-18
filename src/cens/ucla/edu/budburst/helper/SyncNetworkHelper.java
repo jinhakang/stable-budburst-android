@@ -46,6 +46,52 @@ public class SyncNetworkHelper extends Activity{
 	public SyncNetworkHelper(){
 	}
 	
+	static public String upload_new_site(String username, String password, 
+			String site_id, String site_name, String latitude, String longitude, 
+			String state, String comments){
+		
+		try{
+	        // Add your data  
+	        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(6);
+	        String result = null;
+
+			HttpClient httpclient = new DefaultHttpClient();  
+		    		    
+		    String url = new String("" +
+		    		"http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php" +
+		    		"?add_site&username=" + 
+		    		username+"&password="+password);
+		    HttpPost httppost = new HttpPost(url);
+
+        	nameValuePairs.add(new BasicNameValuePair("site_id", site_id));  
+        	nameValuePairs.add(new BasicNameValuePair("site_name", site_name));
+        	nameValuePairs.add(new BasicNameValuePair("latitude", latitude));
+        	nameValuePairs.add(new BasicNameValuePair("longitude", longitude));
+        	nameValuePairs.add(new BasicNameValuePair("state", state));
+        	nameValuePairs.add(new BasicNameValuePair("comments", comments));
+        	httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
+	  
+	        // Execute HTTP Post Request  
+        	HttpResponse response = httpclient.execute(httppost);
+        	BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent())); 
+        	StringBuilder result_str = new StringBuilder();
+			for(;;){
+				String line = rd.readLine();
+				if (line == null) 
+					break;
+				result_str.append(line+'\n');
+			}
+        	result = result_str.toString();
+	        Log.d(TAG, result);
+	        
+			return result;
+		}catch(Exception e){
+			
+		}
+		
+		return null;
+	}
+	
 	static public String upload_new_plant(String username, String password, Context cont
 			,String species_id, String site_id){
 		try{
@@ -68,7 +114,15 @@ public class SyncNetworkHelper extends Activity{
 	  
 	        // Execute HTTP Post Request  
         	HttpResponse response = httpclient.execute(httppost);
-        	result = response.toString();
+        	BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent())); 
+        	StringBuilder result_str = new StringBuilder();
+			for(;;){
+				String line = rd.readLine();
+				if (line == null) 
+					break;
+				result_str.append(line+'\n');
+			}
+        	result = result_str.toString();
 	        Log.d(TAG, response.toString());
 	        
 			return result;
@@ -83,7 +137,7 @@ public class SyncNetworkHelper extends Activity{
 	
 	static public String upload_new_obs(String username, String password, Context cont,
 			String species_id, String site_id, String phenophase_id,
-			String time, String note, Integer image_id){
+			String time, String note, String image_id){
 		try{
 	        // Add your data  
 			String result = null;
@@ -102,7 +156,7 @@ public class SyncNetworkHelper extends Activity{
         	entity.addPart("time", new StringBody(time));
         	entity.addPart("note", new StringBody(note));
 
-		    if(image_id != 0){
+		    if(!image_id.equals("")){
 			    File file = new File("/sdcard/pbudburst/" + image_id.toString() + ".jpg");
 	        	entity.addPart("image", new FileBody(file));
 		    }

@@ -10,7 +10,7 @@
     <cens.ucla.edu.budburst.helper.IndicatorButton
         android:id="@+id/button1"
 		android:layout_width="wrap_content"
-        android:layout_height="29dip"
+        android:layout_height="31dip"
         android:layout_alignParentTop="true" 
         android:text="@string/button_bar1"
         android:layout_weight="0.3333333333"
@@ -20,7 +20,7 @@
 	<cens.ucla.edu.budburst.helper.IndicatorButton
 		android:id="@+id/button2"
 		android:layout_width="wrap_content"
-        android:layout_height="29dip"
+        android:layout_height="31dip"
         android:layout_alignParentTop="true" 
         android:text="@string/button_bar2"
         android:layout_weight="0.3333333333"
@@ -29,11 +29,9 @@
 	<cens.ucla.edu.budburst.helper.IndicatorButton
 		android:id="@+id/button3"
 		android:layout_width="wrap_content"
-        android:layout_height="29dip"
+        android:layout_height="31dip"
         android:layout_alignParentTop="true" 
         android:text="@string/button_bar3"
         android:layout_weight="0.3333333333" 
         android:maxWidth="0px" />
-
-
 </LinearLayout>

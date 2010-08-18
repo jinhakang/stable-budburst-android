@@ -51,11 +51,13 @@ public class AddPlant extends ListActivity{
 			Toast.makeText(AddPlant.this, "Please add your site first.", 
 					Toast.LENGTH_LONG).show();
 			cursor.close();
+			syncDBHelper.close();
 			Intent intent = new Intent(AddPlant.this, PlantList.class);
 			startActivity(intent);
-			finish();			
+			finish();		
 			return;
 		}else{
+			syncDBHelper.close();
 			cursor.close();
 		}
 		

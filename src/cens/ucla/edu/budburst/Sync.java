@@ -46,14 +46,15 @@ public class Sync extends Activity{
 	final private int MENU_LOGOUT = 4;
 	
 	//Sync constants
-	final private int UPLOAD_ADDED_SITE = 1;
-	final private int UPLOAD_ADDED_PLANT = 2;
-	final private int UPLOAD_OBSERVATION = 3;
-	final private int DOWNLOAD_USER_STATION = 4;
-	final private int DOWNLOAD_USER_PLANTS = 5;
-	final private int DOWNLOAD_OBSERVATION = 6;
-	final private int DOWNLOAD_OBSERVATION_IMG = 7;
-	final private int SYNC_COMPLETE = 8;
+	final private int SYNC_START = 1;
+	final private int UPLOAD_ADDED_SITE = 2;
+	final private int UPLOAD_ADDED_PLANT = 3;
+	final private int UPLOAD_OBSERVATION = 4;
+	final private int DOWNLOAD_USER_STATION = 5;
+	final private int DOWNLOAD_USER_PLANTS = 6;
+	final private int DOWNLOAD_OBSERVATION = 7;
+	final private int DOWNLOAD_OBSERVATION_IMG = 8;
+	final private int SYNC_COMPLETE = 9;
 	
 	//Boolean constant with integer
 	final private int FINISH_INT = 1;
@@ -257,6 +258,14 @@ public class Sync extends Activity{
 		
 			//Each step would be reached whenever doSyncThread transfer data with server
 			switch(msg.what){
+			case SYNC_START:
+				mProgress.setProgress(0);
+				mProgress.setMessage("Uploading new sites");
+				
+				//Start Next Step
+				msgToThread.what = UPLOAD_ADDED_SITE;
+				msgToThread.arg1 = mProgressVal;
+				break;
 			case UPLOAD_ADDED_SITE:
 				mProgress.setProgress(mProgressVal);
 				mProgress.setMessage("Uploading new sites");
@@ -392,14 +401,15 @@ class doSyncThread extends Thread{
 	Context context;
 	
 	//Sync constants
-	final private int UPLOAD_ADDED_SITE = 1;
-	final private int UPLOAD_ADDED_PLANT = 2;
-	final private int UPLOAD_OBSERVATION = 3;
-	final private int DOWNLOAD_USER_STATION = 4;
-	final private int DOWNLOAD_USER_PLANTS = 5;
-	final private int DOWNLOAD_OBSERVATION = 6;
-	final private int DOWNLOAD_OBSERVATION_IMG = 7;
-	final private int SYNC_COMPLETE = 8;
+	final private int SYNC_START = 1;
+	final private int UPLOAD_ADDED_SITE = 2;
+	final private int UPLOAD_ADDED_PLANT = 3;
+	final private int UPLOAD_OBSERVATION = 4;
+	final private int DOWNLOAD_USER_STATION = 5;
+	final private int DOWNLOAD_USER_PLANTS = 6;
+	final private int DOWNLOAD_OBSERVATION = 7;
+	final private int DOWNLOAD_OBSERVATION_IMG = 8;
+	final private int SYNC_COMPLETE = 9;
 	
 	private String TAG = new String("SYNC");
 	
@@ -424,7 +434,7 @@ class doSyncThread extends Thread{
 		password = pref.getString("Password","");
 		
 		Message msgToMain = Message.obtain();
-		msgToMain.what = UPLOAD_ADDED_SITE;
+		msgToMain.what = SYNC_START;
 		mMsgHandler.sendMessage(msgToMain);
 		
 		mLoop = Looper.myLooper();
@@ -466,8 +476,65 @@ class doSyncThread extends Thread{
 			case UPLOAD_ADDED_SITE:
 				msgToMain.what = UPLOAD_ADDED_SITE;
 				msgToMain.arg1 = mProgressVal + 5;
-				//Call upload added site
-				//Make msg.
+				
+				query = "SELECT site_id, site_name, latitude, longitude, state, comments " +
+						"FROM my_sites WHERE synced=" + SyncDBHelper.SYNCED_NO;
+				cursor = syncRDB.rawQuery(query, null);
+				
+				if(cursor.getCount() == 0){
+					cursor.close();
+					break;
+				}
+				
+				while(cursor.moveToNext()){
+					String site_id =  cursor.getString(0);
+					String site_name = cursor.getString(1);
+					String latitude = cursor.getString(2);
+					String longitude = cursor.getString(3);
+					String state = cursor.getString(4);
+					String comments = cursor.getString(5);
+					
+					serverResponse = SyncNetworkHelper.upload_new_site(username, password, 
+							site_id, site_name, latitude, longitude, state, comments);
+					
+					if(serverResponse == null){
+						msgToMain.what = UPLOAD_ADDED_SITE* -1;
+						mLoop.quit();
+						break;
+					}
+					
+					//Server response check
+					try{
+						jsonobj = new JSONObject(serverResponse);
+						if(jsonobj.getBoolean("success") == false){
+							msgToMain.what = Sync.SERVER_ERROR;
+							msgToMain.obj = jsonobj.getString("error_message");
+							mLoop.quit();
+							break;
+						}else{
+							//Retrieve new site id 
+							String site_id_from_server = jsonobj.getString("results");
+							
+							//Update my_plants table with new site id 
+							query = "UPDATE my_plants " +
+							"SET site_id='" + site_id_from_server + "' " +
+							"WHERE site_id='" + site_id+"';";
+							syncWDB.execSQL(query);
+							
+							//Update my_observation table with new site id
+							query = "UPDATE my_observation " +
+							"SET site_id='" + site_id_from_server + "' " +
+							"WHERE site_id='" + site_id+"';";
+							syncWDB.execSQL(query);
+						}
+					}catch(Exception e){
+			            e.printStackTrace();
+						Log.e(TAG, e.toString());
+						Log.d(TAG, "UPLOAD_ADDED_SITE: failed");
+					}
+					
+				}
+				cursor.close();
 				break;
 			case UPLOAD_ADDED_PLANT:
 				msgToMain.what = UPLOAD_ADDED_PLANT;
@@ -513,6 +580,7 @@ class doSyncThread extends Thread{
 							break;
 						}
 					}catch(Exception e){
+			            e.printStackTrace();
 						Log.e(TAG, e.toString());
 						Log.d(TAG, "UPLOAD_ADDED_PLANT: failed");
 					}
@@ -540,7 +608,7 @@ class doSyncThread extends Thread{
 					cursor.moveToNext();
 					serverResponse = SyncNetworkHelper.upload_new_obs(username, password, context,
 							cursor.getString(0), cursor.getString(1), cursor.getString(2),
-							cursor.getString(3), cursor.getString(4), cursor.getInt(5));
+							cursor.getString(3), cursor.getString(4), cursor.getString(5));
 					if(serverResponse == null){
 						//Error occurs. Quit thread. Notify this to main class.
 						msgToMain.what = UPLOAD_OBSERVATION * -1;
@@ -674,11 +742,11 @@ class doSyncThread extends Thread{
 								jsonresult.getJSONObject(i).getString("pro_id") + "," +
 								SyncDBHelper.SYNCED_YES + ");");
 					}
-					Log.d(TAG, "DOWNLOAD_MY_SPECIES_IN_MY_STATION: success to store into db");
+					Log.d(TAG, "DOWNLOAD_USER_PLANTS: success to store into db");
 
 				}catch(Exception e){
 					Log.e(TAG, e.toString());
-					Log.d(TAG, "DOWNLOAD_MY_SPECIES_IN_MY_STATION: failed to store into db");
+					Log.d(TAG, "DOWNLOAD_USER_PLANTS: failed to store into db");
 				}
 				break;
 			case DOWNLOAD_OBSERVATION:
@@ -689,7 +757,7 @@ class doSyncThread extends Thread{
 				.download_json(context.getString(R.string.get_observation_URL)
 						+"&username="+ username	+"&password="+ password);
 				if(serverResponse == null){
-					msgToMain.what = DOWNLOAD_USER_PLANTS * -1;
+					msgToMain.what = DOWNLOAD_OBSERVATION * -1;
 					mLoop.quit();
 				}
 				
