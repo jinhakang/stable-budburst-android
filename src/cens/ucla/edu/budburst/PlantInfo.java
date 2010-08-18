@@ -1,6 +1,7 @@
 package cens.ucla.edu.budburst;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -335,6 +336,8 @@ public class PlantInfo extends Activity{
 				intent.putExtra("protocol_id",current_protocol_id);
 				intent.putExtra("site_id", current_site_id);
 				
+				//resizeImage(BASE_PATH+camera_image_id+".jpg");
+				
 				//Check the previous observation date is same as today
 				if(observation.time.equals("") || 
 						observation.time.equals(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))){
@@ -417,6 +420,7 @@ public class PlantInfo extends Activity{
 					mediaCaptureIntent.putExtra(MediaStore.EXTRA_OUTPUT, 
 							Uri.fromFile(new File(BASE_PATH, camera_image_id + ".jpg")));
 					startActivityForResult(mediaCaptureIntent, PHOTO_CAPTURE_CODE);
+										
 				}catch(Exception e){
 					Log.e(TAG, e.toString());
 				}
@@ -466,6 +470,36 @@ public class PlantInfo extends Activity{
 				showImageCameraButton(observation);
 			}
 		});
+		
+	}
+	
+	public void resizeImage(String path){
+		Bitmap bitmapOrg = BitmapFactory.decodeFile(path);
+		
+		int width = bitmapOrg.getWidth();
+		int height = bitmapOrg.getHeight();
+		int newWidth;
+		int newHeight;
+		if(width > height){
+			newWidth = 1024/2;
+			newHeight = 768/2;
+		}else{
+			newWidth = 768/2;
+			newHeight = 1024/2;
+		}
+		
+		float scaleWidth = ((float)newWidth)/width;
+		float scaleHeight = ((float)newHeight)/height;
+		
+		Matrix matrix = new Matrix();
+		matrix.postScale(scaleWidth, scaleHeight);
+		Bitmap resizedBitmap = Bitmap.createBitmap(bitmapOrg,0,0,width,height,matrix, true);
+		try{
+			FileOutputStream out = new FileOutputStream(path);
+			resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+		}catch(Exception e){
+			Log.e(TAG, e.toString());
+		}
 		
 	}
 	
@@ -571,6 +605,7 @@ public class PlantInfo extends Activity{
 			return obs;
 		}
 		catch(Exception e){
+			e.printStackTrace();
 			Log.e(TAG, e.toString());
 			return null;
 		}
@@ -597,6 +632,7 @@ public class PlantInfo extends Activity{
 			staticDBHelper.close();
 			return arPhenophase;
 		}catch(Exception e){
+			e.printStackTrace();
 			Log.e(TAG, e.toString());
 			return null;
 		}
@@ -917,8 +953,8 @@ public class PlantInfo extends Activity{
 			}
 		};
 
-
 }
+
 
 class Observation{
 
@@ -1004,11 +1040,11 @@ class Observation{
 						"image_id=" + image_id + "," +
 						"time='" + time + "'" + "," +
 						"note='" + note + "'" + "," +
-						SyncDBHelper.SYNCED_NO + " " + 
+						"synced=" + SyncDBHelper.SYNCED_NO + " " + 
 						"WHERE _id=" + obs_id + ";"; 
 			}
 			db.execSQL(query);
-			
+			syncDBHelper.close();
 		}catch(Exception e){
 			Log.e(TAG, e.toString());
 		}
