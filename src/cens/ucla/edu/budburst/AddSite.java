@@ -1,7 +1,9 @@
 package cens.ucla.edu.budburst;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -46,13 +48,23 @@ public class AddSite extends Activity{
 		LocationManager lmanager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		String bestprovider = lmanager.getBestProvider(criteria, true);
 		
+	     if (!(lmanager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+	    		 && lmanager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))){  
+	          createLocationServiceDisabledAlert();  
+	     }  
+	     
+		
+	    if(bestprovider == null)
+	    	bestprovider = "gps";
 		Location cur_location = lmanager.getLastKnownLocation(bestprovider);
 		
-		latitude = (EditText)this.findViewById(R.id.latitude);
-		latitude.setText(String.valueOf(cur_location.getLatitude()));
+		if(cur_location != null){
+			latitude = (EditText)this.findViewById(R.id.latitude);
+			latitude.setText(String.valueOf(cur_location.getLatitude()));
 
-		longitude = (EditText)this.findViewById(R.id.longitude);
-		longitude.setText(String.valueOf(cur_location.getLongitude()));
+			longitude = (EditText)this.findViewById(R.id.longitude);
+			longitude.setText(String.valueOf(cur_location.getLongitude()));
+		}		
 		
 		sitename = (EditText)this.findViewById(R.id.sitename);
 		comment = (EditText)this.findViewById(R.id.comment);
@@ -155,4 +167,32 @@ public class AddSite extends Activity{
 			}
 		});
 	}
+	
+	private void createLocationServiceDisabledAlert(){  
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);  
+		builder.setMessage("Your location service is disabled. Please enable both wireless " +
+				"networks and GPS satelites to identify your location.")  
+		     .setCancelable(false)  
+		     .setPositiveButton("Enable",  
+		          new DialogInterface.OnClickListener(){  
+		          public void onClick(DialogInterface dialog, int id){  
+		               showLocationOptions();  
+		          }  
+		     });  
+		     builder.setNegativeButton("Cancel",  
+		          new DialogInterface.OnClickListener(){  
+		          public void onClick(DialogInterface dialog, int id){  
+		               dialog.cancel();  
+		          }  
+		     });  
+		AlertDialog alert = builder.create();  
+		alert.show();  
+		}  
+		  
+	private void showLocationOptions(){  
+	        Intent gpsOptionsIntent = new Intent(  
+	                android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);  
+	        startActivity(gpsOptionsIntent);  
+	}  
+	
 }

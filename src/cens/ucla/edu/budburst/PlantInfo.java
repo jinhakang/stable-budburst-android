@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -23,6 +24,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,9 +62,16 @@ public class PlantInfo extends Activity{
 	ArrayList<Button> buttonBar = new ArrayList<Button>();
 	public Observation temporary_obs = new Observation();
 	public Observation observation;
+	public Observation current_obs;
 	public int k;
 	
 	protected Long camera_image_id;
+	
+	//MENU contants
+	final private int MENU_ADD_PLANT = 1;
+	final private int MENU_ADD_SITE = 2;
+	final private int MENU_LOGOUT = 3;
+	final private int MENU_SYNC = 4;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -153,7 +164,7 @@ public class PlantInfo extends Activity{
 				icon = overlay(icon, BitmapFactory.decodeResource(
 					getResources(),R.drawable.translucent_gray35));
 
-			Observation current_obs = getObservation(phenophases_in_this_tab.get(k), current_species_id, current_site_id);
+			current_obs = getObservation(phenophases_in_this_tab.get(k), current_species_id, current_site_id);
 			if (current_obs != null){
 				icon = overlay(icon, BitmapFactory.decodeResource(
 					getResources(),R.drawable.check_mark));
@@ -326,6 +337,8 @@ public class PlantInfo extends Activity{
 		
 		//Save Button
 		Button save = (Button) this.findViewById(R.id.save);
+		if(current_obs != null)
+			save.setText("Update Observation");
 		save.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) { 
 				
@@ -531,9 +544,9 @@ public class PlantInfo extends Activity{
 			File file = new File(image_path);
 
 			BitmapFactory.Options options = new BitmapFactory.Options();
-			if(file.length() > 500000)
+			if(file.length() > 1000000)
  				options.inSampleSize=4;
-			else if(file.length() > 100000)
+			else if(file.length() > 500000)
 				options.inSampleSize=2;
 			else
 				options.inSampleSize=1;
@@ -960,7 +973,83 @@ public class PlantInfo extends Activity{
 				
 			}
 		};
-
+	/////////////////////////////////////////////////////////////
+	//Menu option
+	public boolean onCreateOptionsMenu(Menu menu){
+		super.onCreateOptionsMenu(menu);
+		
+		SubMenu addButton = menu.addSubMenu("Add")
+			.setIcon(android.R.drawable.ic_menu_add);
+		addButton.add(0,MENU_ADD_SITE,0,"Add Site");
+		addButton.add(0,MENU_ADD_PLANT,0,"Add Plant");
+				
+		
+		menu.add(0,MENU_SYNC,0,"Sync").setIcon(android.R.drawable.ic_menu_rotate);
+		menu.add(0,MENU_LOGOUT,0,"Log out").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+			
+		return true;
+	}
+	
+	//Menu option selection handling
+	public boolean onOptionsItemSelected(MenuItem item){
+		Intent intent;
+		switch(item.getItemId()){
+			case MENU_ADD_PLANT:
+				intent = new Intent(PlantInfo.this, AddPlant.class);
+				startActivity(intent);
+				finish();
+				return true;
+			case MENU_ADD_SITE:
+				intent = new Intent (PlantInfo.this, AddSite.class);
+				startActivity(intent);
+				//finish();
+				return true;
+			case MENU_SYNC:
+				intent = new Intent(PlantInfo.this, Sync.class);
+				intent.putExtra("sync_instantly", true);
+				startActivity(intent);
+				finish();
+				return true;
+			case MENU_LOGOUT:
+				new AlertDialog.Builder(PlantInfo.this)
+					.setTitle("Question")
+					.setMessage("You might lose your unsynced data if you log out. Do you want to log out?")
+					.setPositiveButton("Yes",logoutClick)
+					.setNegativeButton("no",logoutClick)
+					.show();
+				return true;
+		}
+		return false;
+	}
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	//Dialog confirm message if user clicks logout button
+	DialogInterface.OnClickListener logoutClick =
+		new DialogInterface.OnClickListener(){
+		public void onClick(DialogInterface dialog, int whichButton){
+			if(whichButton == DialogInterface.BUTTON1){
+				
+				SharedPreferences pref = getSharedPreferences("userinfo",0);
+				SharedPreferences.Editor edit = pref.edit();				
+				edit.putString("Username","");
+				edit.putString("Password","");
+				edit.putString("synced", "false");
+				edit.commit();
+				
+				//Drop user table in database
+				SyncDBHelper dbhelper = new SyncDBHelper(PlantInfo.this);
+				dbhelper.clearAllTable(PlantInfo.this);
+				dbhelper.close();
+				
+				Intent intent = new Intent(PlantInfo.this, Login.class);
+				startActivity(intent);
+				finish();
+			}else{
+			}
+		}
+	};
+	//Menu option
+	/////////////////////////////////////////////////////////////
 }
 
 
