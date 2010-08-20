@@ -4,9 +4,10 @@
     <string name="signupURL">http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/register_mobile</string>
     <string name="instruction_old">You have no plants yet, or you need to syncronize your phone.\n\n (1) Start by adding a plant to an existing site (MENU &gt; Add Plant). \n\n (2) Please synchronize your phone with the database (Menu &gt; Sync).  If this fails, you may have connectivity problems.</string>
     <string name="instruction">You need to synchronize your phone with Project Budburst database.\n\n 
-     (1) Please click Sync button. You can find Sync button at any page by clicking MENU button.\n\n
+    You can find Sync button at any page by clicking MENU button. Please be sure that you need to sync 
+    before log out in order to upload your data to server.\n\n
+    Please click Sync button.
     
-     (2) Add a plant to an existing site. (MENU &gt; ADD &gt; Add Plant). Click one of plants in plant list and submit your observation. 
      </string>
     <string name="get_my_species_in_my_station_URL">
     http://cens.solidnetdns.com/~jinha/PBB/PBsite_CENS/phone/phone_service.php?get_my_species_in_my_station

@@ -556,12 +556,14 @@ public class PlantInfo extends Activity{
 			Bitmap resizedBitmap = BitmapFactory.decodeFile(image_path,options); 
 			img.setImageBitmap(resizedBitmap);
 			
-			try{
-				//FileOutputStream out = new FileOutputStream(BASE_PATH + "hellooo.jpg");
-				FileOutputStream out = new FileOutputStream(image_path);
-				resizedBitmap.compress(Bitmap.CompressFormat.JPEG,90,out);
-			}catch(Exception e){
-				Log.e(TAG,e.toString());
+			if(options.inSampleSize != 1){
+				try{
+					//FileOutputStream out = new FileOutputStream(BASE_PATH + "hellooo.jpg");
+					FileOutputStream out = new FileOutputStream(image_path);
+					resizedBitmap.compress(Bitmap.CompressFormat.JPEG,90,out);
+				}catch(Exception e){
+					Log.e(TAG,e.toString());
+				}
 			}
 		}
 		else{
